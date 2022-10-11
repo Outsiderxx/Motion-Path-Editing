@@ -15,15 +15,24 @@ public class BVHParser
     private string bvhText;
     private int pos = 0;
 
+    public List<BVHBone> allBones
+    {
+        get
+        {
+            return this.boneList;
+        }
+    }
+
     public class BVHBone
     {
         public string name;
         public BVHBone parent;
         public List<BVHBone> children;
         public float offsetX, offsetY, offsetZ;
-        public float endSiteOffsetX, endSiteOffsetY, endSiteOffsetZ;
+        public float endSiteOffsetX = 0, endSiteOffsetY = 0, endSiteOffsetZ = 0;
         public int[] channelOrder;
         public int channelNumber;
+        public Quaternion[] quaternions;
         public BVHChannel[] channels;
         public Transform translform;
         public Transform endSiteTransform;

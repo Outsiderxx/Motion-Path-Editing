@@ -6,6 +6,7 @@ public class BVHMotionPlayer : MonoBehaviour
     [Range(0, 2)]
     public float speed = 1;
 
+    private CubicBSplineController splineController;
     private BVHParser bvhData;
     private float _currentTime = 0;
     private int _currentFrameIndex = -1;
@@ -47,9 +48,9 @@ public class BVHMotionPlayer : MonoBehaviour
         }
     }
 
-    private void Start()
+    private void Awake()
     {
-        Application.targetFrameRate = 60;
+        this.splineController = this.GetComponent<CubicBSplineController>();
     }
 
     void Update()
@@ -60,6 +61,11 @@ public class BVHMotionPlayer : MonoBehaviour
         }
         this.UpdateAnimationTime();
         this.DrawBone(this.bvhData.root.translform);
+        this.DrawMotion();
+
+        // draw forward
+        Transform root = this.bvhData.root.translform;
+        Debug.DrawLine(root.position, root.position + root.forward * 20, Color.blue);
     }
 
     public void Play(BVHParser bvhData)
@@ -69,7 +75,10 @@ public class BVHMotionPlayer : MonoBehaviour
             this.ResetState();
         }
         this.bvhData = bvhData;
+        this.handleBVHData();
+        this.CreateSpline();
         this.CreateSkeleton();
+        this.TransformToLocalCoordinate();
     }
 
     public void Stop()
@@ -82,12 +91,35 @@ public class BVHMotionPlayer : MonoBehaviour
         GameObject root = this.AddJoint(this.bvhData.root, this.transform);
     }
 
+    private void CreateSpline()
+    {
+        Vector3[] points = new Vector3[bvhData.frames];
+        for (int i = 0; i < points.Length; i++)
+        {
+            points[i] = new Vector3(bvhData.root.channels[0].values[i], bvhData.root.channels[1].values[0], bvhData.root.channels[2].values[i]);
+        }
+        this.splineController.spline = new CubicBSpline(points);
+    }
+
+    private void TransformToLocalCoordinate()
+    {
+        for (int i = 0; i < this.bvhData.frames; i++)
+        {
+            Vector4 worldPosition = new Vector4(this.bvhData.root.channels[0].values[i], this.bvhData.root.channels[1].values[i], this.bvhData.root.channels[2].values[i], 1);
+            Vector3 localPosition = this.splineController.spline.GetTranslationMatrix(i).inverse * worldPosition;
+            this.bvhData.root.channels[0].values[i] = localPosition.x;
+            this.bvhData.root.channels[1].values[i] = localPosition.y;
+            this.bvhData.root.channels[2].values[i] = localPosition.z;
+            this.bvhData.root.quaternions[i] = Quaternion.Inverse(this.splineController.spline.GetQuaternion(i)) * this.bvhData.root.quaternions[i];
+        }
+    }
+
     private GameObject AddJoint(BVHParser.BVHBone jointData, Transform parent)
     {
         GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         gameObject.name = jointData.name;
         gameObject.transform.parent = parent;
-        gameObject.transform.localPosition = new Vector3(-jointData.offsetX, jointData.offsetY, jointData.offsetZ);
+        gameObject.transform.localPosition = new Vector3(jointData.offsetX, jointData.offsetY, jointData.offsetZ);
         jointData.translform = gameObject.transform;
         foreach (var childJoint in jointData.children)
         {
@@ -98,7 +130,7 @@ public class BVHMotionPlayer : MonoBehaviour
             GameObject child = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             child.name = jointData.name + "_EndEffector";
             child.transform.parent = gameObject.transform;
-            child.transform.localPosition = new Vector3(-jointData.endSiteOffsetX, jointData.endSiteOffsetY, jointData.endSiteOffsetZ);
+            child.transform.localPosition = new Vector3(jointData.endSiteOffsetX, jointData.endSiteOffsetY, jointData.endSiteOffsetZ);
             jointData.endSiteTransform = child.transform;
         }
         return gameObject;
@@ -108,7 +140,7 @@ public class BVHMotionPlayer : MonoBehaviour
     {
         this.UpdateRootPosition();
         this.UpdateJointRotation(this.bvhData.root);
-        print($"currentFrameIndex: {this.currentFrameIndex}");
+        this.UpdateRootWorldRotation();
     }
 
     private void UpdateAnimationTime()
@@ -119,18 +151,18 @@ public class BVHMotionPlayer : MonoBehaviour
 
     private void UpdateRootPosition()
     {
-        this.bvhData.root.translform.localPosition = new Vector3(-this.bvhData.root.channels[0].values[this.currentFrameIndex], this.bvhData.root.channels[1].values[this.currentFrameIndex], this.bvhData.root.channels[2].values[this.currentFrameIndex]);
+        Vector4 localPosition = new Vector4(this.bvhData.root.channels[0].values[this.currentFrameIndex], this.bvhData.root.channels[1].values[this.currentFrameIndex], this.bvhData.root.channels[2].values[this.currentFrameIndex], 1);
+        this.bvhData.root.translform.localPosition = this.splineController.spline.GetTranslationMatrix(this.currentFrameIndex) * localPosition;
+    }
+
+    private void UpdateRootWorldRotation()
+    {
+        this.bvhData.root.translform.localRotation = this.splineController.spline.GetQuaternion(this.currentFrameIndex) * this.bvhData.root.translform.localRotation;
     }
 
     private void UpdateJointRotation(BVHParser.BVHBone jointData)
     {
-        Transform jointTransform = jointData.translform;
-        float rotationX = jointData.channels[3].values[this.currentFrameIndex];
-        float rotationY = -jointData.channels[4].values[this.currentFrameIndex];
-        float rotationZ = -jointData.channels[5].values[this.currentFrameIndex];
-        jointTransform.localRotation = Quaternion.AngleAxis(rotationZ, Vector3.forward);
-        jointTransform.localRotation *= Quaternion.AngleAxis(rotationX, Vector3.right);
-        jointTransform.localRotation *= Quaternion.AngleAxis(rotationY, Vector3.up);
+        jointData.translform.localRotation = jointData.quaternions[this.currentFrameIndex];
         foreach (var childJointData in jointData.children)
         {
             this.UpdateJointRotation(childJointData);
@@ -146,11 +178,52 @@ public class BVHMotionPlayer : MonoBehaviour
         }
     }
 
+    private void DrawMotion()
+    {
+
+        Transform root = this.bvhData.root.translform.parent;
+        for (int i = 0; i < this.bvhData.frames - 1; i++)
+        {
+            Vector4 currentLocalPosition = new Vector4(this.bvhData.root.channels[0].values[i], this.bvhData.root.channels[1].values[i], this.bvhData.root.channels[2].values[i], 1);
+            Vector4 nextLocalPosition = new Vector4(this.bvhData.root.channels[0].values[i + 1], this.bvhData.root.channels[1].values[i + 1], this.bvhData.root.channels[2].values[i + 1], 1);
+            Vector3 currentWorldPosition = this.splineController.spline.GetTranslationMatrix(i) * currentLocalPosition;
+            Vector3 nextWorldPosition = this.splineController.spline.GetTranslationMatrix(i + 1) * nextLocalPosition;
+            Debug.DrawLine(root.TransformPoint(currentWorldPosition), root.TransformPoint(nextWorldPosition), Color.green);
+        }
+    }
+
     private void ResetState()
     {
         this.bvhData = null;
         this._currentTime = 0;
         this._currentFrameIndex = 0;
         MyUtils.DestroyAllChild(this.transform);
+    }
+
+    private void handleBVHData()
+    {
+        for (int i = 0; i < this.bvhData.frames; i++)
+        {
+            this.bvhData.root.channels[0].values[i] *= -1;
+            foreach (var jointData in this.bvhData.allBones)
+            {
+                jointData.offsetX *= -1;
+                jointData.endSiteOffsetX *= -1;
+                jointData.channels[4].values[i] *= -1;
+                jointData.channels[5].values[i] *= -1;
+            }
+        }
+
+        foreach (BVHParser.BVHBone bone in this.bvhData.allBones)
+        {
+            bone.quaternions = new Quaternion[this.bvhData.frames];
+            for (int i = 0; i < this.bvhData.frames; i++)
+            {
+                // TODO consider rotation order current Z-> X -> Y
+                bone.quaternions[i] = Quaternion.AngleAxis(bone.channels[5].values[i], Vector3.forward);
+                bone.quaternions[i] *= Quaternion.AngleAxis(bone.channels[3].values[i], Vector3.right);
+                bone.quaternions[i] *= Quaternion.AngleAxis(bone.channels[4].values[i], Vector3.up);
+            }
+        }
     }
 }

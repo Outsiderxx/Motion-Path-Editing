@@ -5,6 +5,12 @@ public class AppManager : MonoBehaviour
 {
     [SerializeField] private GameObject bvhMotionPlayerPrefab = null;
     [SerializeField] private Transform playground;
+
+    private void Start()
+    {
+        Application.targetFrameRate = 60;
+    }
+
     public void AddMotions()
     {
         string[] selectedFilePathes = DialogShow.ShowOpenFileDialog("Choose bvh files", Application.dataPath, "bvh files\0*.bvh\0All Files\0*.*\0\0", false, true);
