@@ -10,6 +10,7 @@ public class AppManager : MonoBehaviour
     [SerializeField] private Toggle useArcLengthToggle;
     [SerializeField] private GameObject controlPanel;
     [SerializeField] private Text motionNameText;
+    [SerializeField] private RuntimeGizmos.TransformGizmo gizmo;
 
     private RectTransform controlPanelBG;
     private BVHMotionPlayer _selectedMotion = null;
@@ -136,6 +137,7 @@ public class AppManager : MonoBehaviour
             this.speedSlider.value = this.selectedMotion.speed / 2;
             this.useArcLengthToggle.isOn = this.selectedMotion.splineController.useArcLength;
             this.motionNameText.text = this.selectedMotion.gameObject.name;
+            gizmo.AddTarget(this.selectedMotion.transform.parent, true);
         }
         else
         {

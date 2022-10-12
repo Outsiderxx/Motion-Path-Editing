@@ -43,6 +43,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e97367130d2469446afbf141bc1bf20a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  useArcLength: 0
 --- !u!1 &3011796575127304963
 GameObject:
   m_ObjectHideFlags: 0
@@ -230,7 +231,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8970617178985725907}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: BVHMotionPlayer 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}

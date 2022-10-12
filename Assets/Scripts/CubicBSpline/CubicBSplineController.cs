@@ -47,9 +47,10 @@ public class CubicBSplineController : MonoBehaviour
         foreach (Vector3 controlPoint in this._spline.controlPoints)
         {
             GameObject controlPointEntity = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            controlPointEntity.transform.localScale = Vector3.one * 3;
+            controlPointEntity.transform.localScale = Vector3.one * 5;
             controlPointEntity.transform.parent = this.transform;
             controlPointEntity.transform.localPosition = controlPoint;
+            controlPointEntity.layer = 3;
             controlPoints.Add(controlPointEntity.transform);
         }
     }

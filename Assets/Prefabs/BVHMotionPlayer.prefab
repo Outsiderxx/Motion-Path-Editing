@@ -46,6 +46,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isLoop: 1
   speed: 1
+  splineController: {fileID: 0}
+  modelController: {fileID: 0}
+  skeletonRoot: {fileID: 0}
 --- !u!114 &3414506835418223563
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -58,3 +61,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e97367130d2469446afbf141bc1bf20a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  useArcLength: 0
