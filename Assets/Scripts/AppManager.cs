@@ -8,6 +8,7 @@ public class AppManager : MonoBehaviour
     [SerializeField] private Transform playground;
     [SerializeField] private Slider speedSlider;
     [SerializeField] private Toggle useArcLengthToggle;
+    [SerializeField] private Toggle displayModelToggle;
     [SerializeField] private GameObject controlPanel;
     [SerializeField] private Text motionNameText;
     [SerializeField] private RuntimeGizmos.TransformGizmo gizmo;
@@ -112,6 +113,15 @@ public class AppManager : MonoBehaviour
         }
     }
 
+    public void ToggleDisplayMode(bool isOn)
+    {
+        if (this.selectedMotion != null)
+        {
+            this.selectedMotion.displayModel = isOn;
+            print($"display model: {isOn}");
+        }
+    }
+
     public void ToggleArcLength(bool isOn)
     {
         if (this.selectedMotion != null)
@@ -136,6 +146,7 @@ public class AppManager : MonoBehaviour
             print($"select {this.selectedMotion.gameObject.name}");
             this.speedSlider.value = this.selectedMotion.speed / 2;
             this.useArcLengthToggle.isOn = this.selectedMotion.splineController.useArcLength;
+            this.displayModelToggle.isOn = this.selectedMotion.displayModel;
             this.motionNameText.text = this.selectedMotion.gameObject.name;
             gizmo.AddTarget(this.selectedMotion.transform.parent, true);
         }

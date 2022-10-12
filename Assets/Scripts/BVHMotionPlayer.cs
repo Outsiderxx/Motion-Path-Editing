@@ -13,7 +13,25 @@ public class BVHMotionPlayer : MonoBehaviour
     private BVHParser bvhData;
     private float _currentTime = 0;
     private int _currentFrameIndex = -1;
-    private bool displayModel = true;
+    private bool _displayModel = true;
+
+    public bool displayModel
+    {
+        get
+        {
+            return this._displayModel;
+        }
+        set
+        {
+            if (this._displayModel == value)
+            {
+                return;
+            }
+            this._displayModel = value;
+            this.bvhData.root.transform.gameObject.SetActive(!value);
+            this.modelController.gameObject.SetActive(value);
+        }
+    }
 
     public bool isPlaying
     {
@@ -81,13 +99,6 @@ public class BVHMotionPlayer : MonoBehaviour
     public void Stop()
     {
         this.ResetState();
-    }
-
-    public void ToggleDisplayMode()
-    {
-        this.displayModel = !this.displayModel;
-        this.bvhData.root.transform.gameObject.SetActive(!this.displayModel);
-        this.modelController.gameObject.SetActive(this.displayModel);
     }
 
     private void CreateSkeleton()
