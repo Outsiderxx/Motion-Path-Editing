@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf8af79e3bbb27d4eb43f11ffa1f6d96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bvhMotionPlayerPrefab: {fileID: 3575468440564610945, guid: 9941030a4f491834da66dcdfebc64293, type: 3}
+  bvhMotionPlayerPrefab: {fileID: 8970617178985725905, guid: 8e560b1e62e3b86479ea538f115c36e3, type: 3}
   playground: {fileID: 289505058}
 --- !u!4 &64775192
 Transform:

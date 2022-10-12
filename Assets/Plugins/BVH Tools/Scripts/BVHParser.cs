@@ -34,7 +34,7 @@ public class BVHParser
         public int channelNumber;
         public Quaternion[] quaternions;
         public BVHChannel[] channels;
-        public Transform translform;
+        public Transform transform;
         public Transform endSiteTransform;
 
         private BVHParser bp;
@@ -146,6 +146,26 @@ public class BVHParser
                 }
             } while (peek != '}');
         }
+    }
+
+    public BVHBone GetBone(string boneName)
+    {
+        return this.allBones.Find((bone) => bone.name == boneName);
+    }
+
+    public static Vector3 FindTotalOffset(BVHBone bone)
+    {
+        Vector3 result = Vector3.zero;
+        if (bone.parent != null)
+        {
+            result += BVHParser.FindTotalOffset(bone.parent);
+        }
+        result += new Vector3(bone.offsetX, bone.offsetY, bone.offsetZ);
+        if (bone.isEndEffector)
+        {
+            result += new Vector3(bone.endSiteOffsetX, bone.endSiteOffsetY, bone.endSiteOffsetZ);
+        }
+        return result;
     }
 
     private bool peek(out char c)

@@ -5,8 +5,10 @@ public class BVHMotionPlayer : MonoBehaviour
     public bool isLoop = false;
     [Range(0, 2)]
     public float speed = 1;
+    [SerializeField] private CubicBSplineController splineController;
+    [SerializeField] private ModelController modelController;
+    [SerializeField] private Transform skeletonRoot;
 
-    private CubicBSplineController splineController;
     private BVHParser bvhData;
     private float _currentTime = 0;
     private int _currentFrameIndex = -1;
@@ -48,11 +50,6 @@ public class BVHMotionPlayer : MonoBehaviour
         }
     }
 
-    private void Awake()
-    {
-        this.splineController = this.GetComponent<CubicBSplineController>();
-    }
-
     void Update()
     {
         if (this.bvhData == null)
@@ -60,12 +57,7 @@ public class BVHMotionPlayer : MonoBehaviour
             return;
         }
         this.UpdateAnimationTime();
-        this.DrawBone(this.bvhData.root.translform);
         this.DrawMotion();
-
-        // draw forward
-        Transform root = this.bvhData.root.translform;
-        Debug.DrawLine(root.position, root.position + root.forward * 20, Color.blue);
     }
 
     public void Play(BVHParser bvhData)
@@ -79,6 +71,7 @@ public class BVHMotionPlayer : MonoBehaviour
         this.CreateSpline();
         this.CreateSkeleton();
         this.TransformToLocalCoordinate();
+        this.modelController.bvhData = bvhData;
     }
 
     public void Stop()
@@ -88,7 +81,8 @@ public class BVHMotionPlayer : MonoBehaviour
 
     private void CreateSkeleton()
     {
-        GameObject root = this.AddJoint(this.bvhData.root, this.transform);
+        this.AddJoint(this.bvhData.root, this.skeletonRoot);
+        this.AddBone(this.bvhData.root);
     }
 
     private void CreateSpline()
@@ -120,7 +114,7 @@ public class BVHMotionPlayer : MonoBehaviour
         gameObject.name = jointData.name;
         gameObject.transform.parent = parent;
         gameObject.transform.localPosition = new Vector3(jointData.offsetX, jointData.offsetY, jointData.offsetZ);
-        jointData.translform = gameObject.transform;
+        jointData.transform = gameObject.transform;
         foreach (var childJoint in jointData.children)
         {
             GameObject child = this.AddJoint(childJoint, gameObject.transform);
@@ -136,11 +130,40 @@ public class BVHMotionPlayer : MonoBehaviour
         return gameObject;
     }
 
+    private void AddBone(BVHParser.BVHBone jointData)
+    {
+        if (jointData.parent != null)
+        {
+            Transform parent = jointData.parent.transform;
+            GameObject bone = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            bone.name = $"Bone({parent.name},{jointData.transform.name})";
+            bone.transform.parent = parent;
+            bone.transform.up = (jointData.transform.position - parent.position).normalized;
+            bone.transform.localScale = new Vector3(1, Vector3.Distance(jointData.transform.position, parent.position) * 0.5f, 1);
+            bone.transform.position = Vector3.Lerp(jointData.transform.position, parent.position, 0.5f);
+        }
+        foreach (BVHParser.BVHBone child in jointData.children)
+        {
+            this.AddBone(child);
+        }
+        if (jointData.children.Count == 0)
+        {
+            Vector3 endSitePosition = jointData.transform.position + new Vector3(jointData.endSiteOffsetX, jointData.endSiteOffsetY, jointData.endSiteOffsetZ);
+            GameObject bone = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            bone.name = $"Bone({jointData.transform.name},endSite)";
+            bone.transform.parent = jointData.transform;
+            bone.transform.up = (endSitePosition - jointData.transform.position).normalized;
+            bone.transform.localScale = new Vector3(1, Vector3.Distance(jointData.transform.position, endSitePosition) * 0.5f, 1);
+            bone.transform.position = Vector3.Lerp(jointData.transform.position, endSitePosition, 0.5f);
+        }
+    }
+
     private void NextFrame()
     {
         this.UpdateRootPosition();
         this.UpdateJointRotation(this.bvhData.root);
         this.UpdateRootWorldRotation();
+        this.modelController.SetToFrameIndex(this.currentFrameIndex);
     }
 
     private void UpdateAnimationTime()
@@ -151,44 +174,33 @@ public class BVHMotionPlayer : MonoBehaviour
 
     private void UpdateRootPosition()
     {
-        Vector4 localPosition = new Vector4(this.bvhData.root.channels[0].values[this.currentFrameIndex], this.bvhData.root.channels[1].values[this.currentFrameIndex], this.bvhData.root.channels[2].values[this.currentFrameIndex], 1);
-        this.bvhData.root.translform.localPosition = this.splineController.spline.GetTranslationMatrix(this.currentFrameIndex) * localPosition;
+        this.bvhData.root.transform.localPosition = new Vector3(this.bvhData.root.channels[0].values[this.currentFrameIndex], this.bvhData.root.channels[1].values[this.currentFrameIndex], this.bvhData.root.channels[2].values[this.currentFrameIndex]);
+        this.skeletonRoot.localPosition = this.splineController.spline.GetTranslationMatrix(this.currentFrameIndex) * new Vector4(0, 0, 0, 1);
     }
 
     private void UpdateRootWorldRotation()
     {
-        this.bvhData.root.translform.localRotation = this.splineController.spline.GetQuaternion(this.currentFrameIndex) * this.bvhData.root.translform.localRotation;
+        this.skeletonRoot.localRotation = this.splineController.spline.GetQuaternion(this.currentFrameIndex);
     }
 
     private void UpdateJointRotation(BVHParser.BVHBone jointData)
     {
-        jointData.translform.localRotation = jointData.quaternions[this.currentFrameIndex];
+        jointData.transform.localRotation = jointData.quaternions[this.currentFrameIndex];
         foreach (var childJointData in jointData.children)
         {
             this.UpdateJointRotation(childJointData);
         }
     }
 
-    private void DrawBone(Transform parent)
-    {
-        foreach (Transform child in parent)
-        {
-            Debug.DrawLine(parent.position, child.position, Color.red);
-            this.DrawBone(child);
-        }
-    }
-
     private void DrawMotion()
     {
-
-        Transform root = this.bvhData.root.translform.parent;
         for (int i = 0; i < this.bvhData.frames - 1; i++)
         {
             Vector4 currentLocalPosition = new Vector4(this.bvhData.root.channels[0].values[i], this.bvhData.root.channels[1].values[i], this.bvhData.root.channels[2].values[i], 1);
             Vector4 nextLocalPosition = new Vector4(this.bvhData.root.channels[0].values[i + 1], this.bvhData.root.channels[1].values[i + 1], this.bvhData.root.channels[2].values[i + 1], 1);
             Vector3 currentWorldPosition = this.splineController.spline.GetTranslationMatrix(i) * currentLocalPosition;
             Vector3 nextWorldPosition = this.splineController.spline.GetTranslationMatrix(i + 1) * nextLocalPosition;
-            Debug.DrawLine(root.TransformPoint(currentWorldPosition), root.TransformPoint(nextWorldPosition), Color.green);
+            Debug.DrawLine(this.transform.TransformPoint(currentWorldPosition), this.transform.TransformPoint(nextWorldPosition), Color.green);
         }
     }
 

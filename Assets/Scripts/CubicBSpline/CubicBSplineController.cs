@@ -22,7 +22,6 @@ public class CubicBSplineController : MonoBehaviour
 
     private void Update()
     {
-        this.DrawPath();
         for (int i = 0; i < this.controlPoints.Count; i++)
         {
             if (this.controlPoints[i].hasChanged)
@@ -30,6 +29,8 @@ public class CubicBSplineController : MonoBehaviour
                 this._spline.controlPoints[i] = this.controlPoints[i].localPosition;
             }
         }
+        this.DrawPath();
+        this.DrawControlPointCurve();
     }
 
     private void SpawnControlPoints()
@@ -51,6 +52,14 @@ public class CubicBSplineController : MonoBehaviour
             Vector3 localPositionA = this._spline.GetPosition(i);
             Vector3 localPositionB = this._spline.GetPosition(i + 0.001f);
             Debug.DrawLine(this.transform.TransformPoint(localPositionA), this.transform.TransformPoint(localPositionB), Color.yellow);
+        }
+    }
+
+    private void DrawControlPointCurve()
+    {
+        for (int i = 0; i < this.controlPoints.Count - 1; i++)
+        {
+            Debug.DrawLine(this.controlPoints[i].position, this.controlPoints[i + 1].position, Color.gray);
         }
     }
 

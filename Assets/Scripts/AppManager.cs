@@ -24,7 +24,7 @@ public class AppManager : MonoBehaviour
                     BVHParser bvhData = new BVHParser(File.ReadAllText(selectedFilePath));
                     print($"Load {fileName} successfully");
 
-                    BVHMotionPlayer player = Instantiate(this.bvhMotionPlayerPrefab, this.playground).GetComponent<BVHMotionPlayer>();
+                    BVHMotionPlayer player = Instantiate(this.bvhMotionPlayerPrefab, this.playground).GetComponentInChildren<BVHMotionPlayer>();
                     player.gameObject.name = fileName;
                     player.Play(bvhData);
                 }
