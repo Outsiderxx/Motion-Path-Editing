@@ -96,6 +96,15 @@ public class AppManager : MonoBehaviour
         }
     }
 
+    public void ToggleArcLength()
+    {
+        if (this.selectedMotion != null)
+        {
+            this.selectedMotion.splineController.ToggleUseArcLengthMode();
+            print($"arcLenth mode: {this.selectedMotion.splineController.useArcLength}");
+        }
+    }
+
     private void OnSeletedStateChanged()
     {
         if (this.selectedMotion != null)

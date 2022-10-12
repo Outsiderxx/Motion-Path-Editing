@@ -1,24 +1,31 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class CubicBSpline
 {
-    private List<float> _tFactors;
     public List<Vector3> controlPoints = new List<Vector3>();
+    public bool useArcLength = true;
+
+    private List<float> originTFactors;
+    private List<float> currentTFactors;
+    private List<float> originCumulativeDistances;
+    private List<float> currentCumulativeDistances;
 
     public CubicBSpline(Vector3[] points)
     {
-        this._tFactors = this.CalulateChordLengthAtEachPoint(points);
+        this.CalulateTFacctorAtEachPoint(points);
+        this.CalculateCumlativeDistanceAtEachPoint(points);
+        this.currentCumulativeDistances = new List<float>(this.originCumulativeDistances);
+
         Matrix4x4 matrixA = new Matrix4x4();
 
         // calculate matrix A
         for (int i = 0; i < points.Length; i++)
         {
-            float B0 = B3_0(this._tFactors[i]);
-            float B1 = B3_1(this._tFactors[i]);
-            float B2 = B3_2(this._tFactors[i]);
-            float B3 = B3_3(this._tFactors[i]);
+            float B0 = B3_0(this.originTFactors[i]);
+            float B1 = B3_1(this.originTFactors[i]);
+            float B2 = B3_2(this.originTFactors[i]);
+            float B3 = B3_3(this.originTFactors[i]);
 
             matrixA.m00 += B0 * B0;
             matrixA.m01 += B0 * B1;
@@ -49,10 +56,10 @@ public class CubicBSpline
 
         for (int i = 0; i < points.Length; i++)
         {
-            float B0 = B3_0(this._tFactors[i]);
-            float B1 = B3_1(this._tFactors[i]);
-            float B2 = B3_2(this._tFactors[i]);
-            float B3 = B3_3(this._tFactors[i]);
+            float B0 = B3_0(this.originTFactors[i]);
+            float B1 = B3_1(this.originTFactors[i]);
+            float B2 = B3_2(this.originTFactors[i]);
+            float B3 = B3_3(this.originTFactors[i]);
 
             float test = vectorBPosX[0];
             vectorBPosX[0] += B0 * points[i].x;
@@ -79,39 +86,47 @@ public class CubicBSpline
         {
             this.controlPoints.Add(new Vector3(vectorXPosX[i], 0, vectorXPosZ[i]));
         }
-
-
+        this.OnControlPointsChanged();
     }
 
-    public float GetChordLengthAtPoint(int index)
-    {
-        return this._tFactors[index];
-    }
-
-    public Vector3 GetPosition(float t)
+    public Vector3 GetPositionWithTime(float t)
     {
         return this.controlPoints[0] * B3_0(t) + this.controlPoints[1] * B3_1(t) + this.controlPoints[2] * B3_2(t) + this.controlPoints[3] * B3_3(t);
     }
 
-    public Vector3 GetVelocity(float t)
+    public Vector3 GetPositionWithArcLength(float s)
     {
+        float t = this.FindTFactorOfArcLength(s);
+        return this.GetPositionWithTime(t);
+    }
+
+    private Vector3 GetPosition(int frameIndex)
+    {
+        if (this.useArcLength)
+        {
+            return this.GetPositionWithArcLength(this.originCumulativeDistances[frameIndex]);
+        }
+        return this.GetPositionWithTime(this.originTFactors[frameIndex]);
+    }
+
+    public Vector3 GetVelocity(int frameIndex)
+    {
+        float t = this.useArcLength ? this.FindTFactorOfArcLength(this.originCumulativeDistances[frameIndex]) : this.originTFactors[frameIndex];
         if (t == 0)
         {
-
-            return this.GetPosition(t + 0.001f) - this.GetPosition(0);
+            return this.GetPositionWithTime(t + 0.001f) - this.GetPositionWithTime(0);
         }
-        return this.GetPosition(t) - this.GetPosition(t - 0.001f);
+        return this.GetPositionWithTime(t) - this.GetPositionWithTime(t - 0.001f);
     }
 
     public Vector3 GetDirection(int frameIndex)
     {
-        return this.GetVelocity(this._tFactors[frameIndex]).normalized;
+        return this.GetVelocity(frameIndex).normalized;
     }
 
     public Matrix4x4 GetTranslationMatrix(int frameIndex)
     {
-
-        Vector3 position = this.GetPosition(this._tFactors[frameIndex]);
+        Vector3 position = this.GetPosition(frameIndex);
         Matrix4x4 result = Matrix4x4.identity;
         result.m03 = position.x;
         result.m13 = position.y;
@@ -146,9 +161,9 @@ public class CubicBSpline
         return 0.16667f * t * t * t;
     }
 
-    private List<float> CalulateChordLengthAtEachPoint(Vector3[] points)
+    private void CalulateTFacctorAtEachPoint(Vector3[] points)
     {
-        List<float> result = new List<float>() { 0 };
+        this.originTFactors = new List<float>() { 0 };
         float totalChordLength = 0;
 
         for (int i = 1; i < points.Length; i++)
@@ -158,11 +173,54 @@ public class CubicBSpline
 
         for (int i = 1; i < points.Length; i++)
         {
-            result.Add(result[i - 1] + Vector3.Distance(points[i], points[i - 1]) / totalChordLength);
+            this.originTFactors.Add(this.originTFactors[i - 1] + Vector3.Distance(points[i], points[i - 1]) / totalChordLength);
         }
 
-        result[points.Length - 1] = 1;
+        this.originTFactors[points.Length - 1] = 1;
+    }
 
-        return result;
+    private void CalculateCumlativeDistanceAtEachPoint(Vector3[] points)
+    {
+        this.originCumulativeDistances = new List<float>() { 0 };
+
+        for (int i = 1; i < points.Length; i++)
+        {
+            this.originCumulativeDistances.Add(this.originCumulativeDistances[i - 1] + Vector3.Distance(points[i], points[i - 1]));
+        }
+    }
+
+    public void OnControlPointsChanged()
+    {
+        this.currentTFactors = new List<float>() { 0 };
+        this.currentCumulativeDistances = new List<float>() { 0 };
+
+        for (int i = 1; i < 101; i++)
+        {
+            this.currentTFactors.Add(this.currentTFactors[i - 1] + 1.0f / 100);
+            this.currentCumulativeDistances.Add(this.currentCumulativeDistances[i - 1] + Vector3.Distance(this.GetPositionWithTime(this.currentTFactors[i]), this.GetPositionWithTime(this.currentTFactors[i - 1])));
+        }
+    }
+
+    private float FindTFactorOfArcLength(float arcLength)
+    {
+        int index = -1;
+        for (int i = 0; i < this.currentTFactors.Count; i++)
+        {
+            if (this.currentCumulativeDistances[i] >= arcLength)
+            {
+                index = i;
+                break;
+            }
+        }
+        if (index == -1)
+        {
+            return 1;
+        }
+        if (index == 0)
+        {
+            return 0;
+        }
+        float factor = (arcLength - this.currentCumulativeDistances[index - 1]) / (this.currentCumulativeDistances[index] - this.currentCumulativeDistances[index - 1]);
+        return Mathf.Lerp(this.currentTFactors[index - 1], this.currentTFactors[index], factor);
     }
 }

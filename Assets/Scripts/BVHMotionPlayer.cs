@@ -5,7 +5,7 @@ public class BVHMotionPlayer : MonoBehaviour
     public bool isLoop = false;
     [Range(0, 2)]
     public float speed = 1;
-    [SerializeField] private CubicBSplineController splineController;
+    public CubicBSplineController splineController;
     [SerializeField] private ModelController modelController;
     [SerializeField] private Transform skeletonRoot;
 

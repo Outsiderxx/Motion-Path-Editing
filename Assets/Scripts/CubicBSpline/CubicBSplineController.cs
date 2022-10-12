@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class CubicBSplineController : MonoBehaviour
 {
+    public bool useArcLength = false;
     private CubicBSpline _spline;
     private List<Transform> controlPoints = new List<Transform>();
 
@@ -27,10 +28,18 @@ public class CubicBSplineController : MonoBehaviour
             if (this.controlPoints[i].hasChanged)
             {
                 this._spline.controlPoints[i] = this.controlPoints[i].localPosition;
+                this._spline.OnControlPointsChanged();
             }
         }
         this.DrawPath();
         this.DrawControlPointCurve();
+        this._spline.useArcLength = this.useArcLength;
+    }
+
+    public void ToggleUseArcLengthMode()
+    {
+        this._spline.useArcLength = !this._spline.useArcLength;
+        this.useArcLength = this._spline.useArcLength;
     }
 
     private void SpawnControlPoints()
@@ -47,10 +56,10 @@ public class CubicBSplineController : MonoBehaviour
 
     private void DrawPath()
     {
-        for (float i = 0; i < 1; i += 0.001f)
+        for (float i = 0; i <= 1; i += 0.001f)
         {
-            Vector3 localPositionA = this._spline.GetPosition(i);
-            Vector3 localPositionB = this._spline.GetPosition(i + 0.001f);
+            Vector3 localPositionA = this._spline.GetPositionWithTime(i);
+            Vector3 localPositionB = this._spline.GetPositionWithTime(i + 0.001f);
             Debug.DrawLine(this.transform.TransformPoint(localPositionA), this.transform.TransformPoint(localPositionB), Color.yellow);
         }
     }
