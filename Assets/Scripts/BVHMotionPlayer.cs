@@ -8,6 +8,7 @@ public class BVHMotionPlayer : MonoBehaviour
     public CubicBSplineController splineController;
     [SerializeField] private ModelController modelController;
     [SerializeField] private Transform skeletonRoot;
+    [SerializeField] private LineRenderer motionLine;
 
     private BVHParser bvhData;
     private float _currentTime = 0;
@@ -68,6 +69,7 @@ public class BVHMotionPlayer : MonoBehaviour
             this.ResetState();
         }
         this.bvhData = bvhData;
+        this.motionLine.positionCount = bvhData.frames;
         this.handleBVHData();
         this.CreateSpline();
         this.CreateSkeleton();
@@ -203,13 +205,11 @@ public class BVHMotionPlayer : MonoBehaviour
 
     private void DrawMotion()
     {
-        for (int i = 0; i < this.bvhData.frames - 1; i++)
+        for (int i = 0; i < this.bvhData.frames; i++)
         {
             Vector4 currentLocalPosition = new Vector4(this.bvhData.root.channels[0].values[i], this.bvhData.root.channels[1].values[i], this.bvhData.root.channels[2].values[i], 1);
-            Vector4 nextLocalPosition = new Vector4(this.bvhData.root.channels[0].values[i + 1], this.bvhData.root.channels[1].values[i + 1], this.bvhData.root.channels[2].values[i + 1], 1);
             Vector3 currentWorldPosition = this.splineController.spline.GetTranslationMatrix(i) * currentLocalPosition;
-            Vector3 nextWorldPosition = this.splineController.spline.GetTranslationMatrix(i + 1) * nextLocalPosition;
-            Debug.DrawLine(this.transform.TransformPoint(currentWorldPosition), this.transform.TransformPoint(nextWorldPosition), Color.green);
+            this.motionLine.SetPosition(i, this.transform.TransformPoint(currentWorldPosition));
         }
     }
 
