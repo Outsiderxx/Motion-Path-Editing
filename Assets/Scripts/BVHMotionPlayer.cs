@@ -12,6 +12,7 @@ public class BVHMotionPlayer : MonoBehaviour
     private BVHParser bvhData;
     private float _currentTime = 0;
     private int _currentFrameIndex = -1;
+    private bool displayModel = true;
 
     public bool isPlaying
     {
@@ -72,11 +73,19 @@ public class BVHMotionPlayer : MonoBehaviour
         this.CreateSkeleton();
         this.TransformToLocalCoordinate();
         this.modelController.bvhData = bvhData;
+        this.bvhData.root.transform.gameObject.SetActive(false);
     }
 
     public void Stop()
     {
         this.ResetState();
+    }
+
+    public void ToggleDisplayMode()
+    {
+        this.displayModel = !this.displayModel;
+        this.bvhData.root.transform.gameObject.SetActive(!this.displayModel);
+        this.modelController.gameObject.SetActive(this.displayModel);
     }
 
     private void CreateSkeleton()
@@ -209,7 +218,10 @@ public class BVHMotionPlayer : MonoBehaviour
         this.bvhData = null;
         this._currentTime = 0;
         this._currentFrameIndex = 0;
-        MyUtils.DestroyAllChild(this.transform);
+        foreach (Transform child in this.transform)
+        {
+            MyUtils.DestroyRecursively(child);
+        }
     }
 
     private void handleBVHData()
@@ -217,10 +229,13 @@ public class BVHMotionPlayer : MonoBehaviour
         for (int i = 0; i < this.bvhData.frames; i++)
         {
             this.bvhData.root.channels[0].values[i] *= -1;
-            foreach (var jointData in this.bvhData.allBones)
+        }
+        foreach (var jointData in this.bvhData.allBones)
+        {
+            jointData.offsetX *= -1;
+            jointData.endSiteOffsetX *= -1;
+            for (int i = 0; i < this.bvhData.frames; i++)
             {
-                jointData.offsetX *= -1;
-                jointData.endSiteOffsetX *= -1;
                 jointData.channels[4].values[i] *= -1;
                 jointData.channels[5].values[i] *= -1;
             }

@@ -6,9 +6,53 @@ public class AppManager : MonoBehaviour
     [SerializeField] private GameObject bvhMotionPlayerPrefab = null;
     [SerializeField] private Transform playground;
 
+    private BVHMotionPlayer _selectedMotion = null;
+
+    private BVHMotionPlayer selectedMotion
+    {
+        get
+        {
+            return this._selectedMotion;
+        }
+        set
+        {
+            if (this._selectedMotion == value)
+            {
+                return;
+            }
+            this._selectedMotion = value;
+            this.OnSeletedStateChanged();
+        }
+    }
+
     private void Start()
     {
         Application.targetFrameRate = 60;
+    }
+
+    private void Update()
+    {
+        if (Input.GetMouseButtonUp(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit[] hits = Physics.RaycastAll(ray);
+            BVHMotionPlayer target = null;
+            for (int i = 0; i < hits.Length; i++)
+            {
+                RaycastHit hit = hits[i];
+                target = hit.transform.GetComponentInParent<BVHMotionPlayer>();
+                if (target != null)
+                {
+                    break;
+                }
+            }
+            this.selectedMotion = target;
+        }
+
+        if (Input.GetKeyUp(KeyCode.Delete))
+        {
+            this.DeleteSelectedMotion();
+        }
     }
 
     public void AddMotions()
@@ -27,6 +71,7 @@ public class AppManager : MonoBehaviour
                     BVHMotionPlayer player = Instantiate(this.bvhMotionPlayerPrefab, this.playground).GetComponentInChildren<BVHMotionPlayer>();
                     player.gameObject.name = fileName;
                     player.Play(bvhData);
+                    this.selectedMotion = player;
                 }
                 catch (System.Exception exception)
                 {
@@ -39,6 +84,28 @@ public class AppManager : MonoBehaviour
         {
             print("User cancel action");
 
+        }
+    }
+
+    public void DeleteSelectedMotion()
+    {
+        if (this.selectedMotion != null)
+        {
+            print($"delete {this.selectedMotion.gameObject.name}");
+            MyUtils.DestroyRecursively(this.selectedMotion.transform.parent);
+            this.selectedMotion = null;
+        }
+    }
+
+    private void OnSeletedStateChanged()
+    {
+        if (this.selectedMotion != null)
+        {
+            print($"select {this.selectedMotion.gameObject.name}");
+        }
+        else
+        {
+            print("unselected");
         }
     }
 }
