@@ -246,10 +246,22 @@ public class BVHMotionPlayer : MonoBehaviour
             bone.quaternions = new Quaternion[this.bvhData.frames];
             for (int i = 0; i < this.bvhData.frames; i++)
             {
-                // TODO consider rotation order current Z-> X -> Y
-                bone.quaternions[i] = Quaternion.AngleAxis(bone.channels[5].values[i], Vector3.forward);
-                bone.quaternions[i] *= Quaternion.AngleAxis(bone.channels[3].values[i], Vector3.right);
-                bone.quaternions[i] *= Quaternion.AngleAxis(bone.channels[4].values[i], Vector3.up);
+                for (int j = 3; j < 6; j++)
+                {
+                    int channelID = bone.channelOrder[j];
+                    if (channelID == 3)
+                    {
+                        bone.quaternions[i] *= Quaternion.AngleAxis(bone.channels[3].values[i], Vector3.right);
+                    }
+                    else if (channelID == 4)
+                    {
+                        bone.quaternions[i] *= Quaternion.AngleAxis(bone.channels[4].values[i], Vector3.up);
+                    }
+                    else
+                    {
+                        bone.quaternions[i] = Quaternion.AngleAxis(bone.channels[5].values[i], Vector3.forward);
+                    }
+                }
             }
         }
     }

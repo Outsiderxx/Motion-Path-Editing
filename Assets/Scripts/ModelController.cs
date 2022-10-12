@@ -14,6 +14,7 @@ public class ModelController : MonoBehaviour
     private static Dictionary<string, HumanBodyBones> humanBodyBoneIDMap = new Dictionary<string, HumanBodyBones>()
     {
         ["Hips"] = HumanBodyBones.Hips,
+        ["Abdomen"] = HumanBodyBones.Spine,
         ["LeftHip"] = HumanBodyBones.LeftUpperLeg,
         ["LeftUpLeg"] = HumanBodyBones.LeftUpperLeg,
         ["LeftKnee"] = HumanBodyBones.LeftLowerLeg,

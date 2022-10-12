@@ -83,7 +83,6 @@ public class AppManager : MonoBehaviour
         else
         {
             print("User cancel action");
-
         }
     }
 
