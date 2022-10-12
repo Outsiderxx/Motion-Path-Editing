@@ -1,11 +1,17 @@
 using UnityEngine;
 using System.IO;
+using UnityEngine.UI;
 
 public class AppManager : MonoBehaviour
 {
     [SerializeField] private GameObject bvhMotionPlayerPrefab = null;
     [SerializeField] private Transform playground;
+    [SerializeField] private Slider speedSlider;
+    [SerializeField] private Toggle useArcLengthToggle;
+    [SerializeField] private GameObject controlPanel;
+    [SerializeField] private Text motionNameText;
 
+    private RectTransform controlPanelBG;
     private BVHMotionPlayer _selectedMotion = null;
 
     private BVHMotionPlayer selectedMotion
@@ -25,6 +31,11 @@ public class AppManager : MonoBehaviour
         }
     }
 
+    private void Awake()
+    {
+        this.controlPanelBG = this.controlPanel.transform.Find("Background").GetComponent<RectTransform>();
+    }
+
     private void Start()
     {
         Application.targetFrameRate = 60;
@@ -34,6 +45,10 @@ public class AppManager : MonoBehaviour
     {
         if (Input.GetMouseButtonUp(0))
         {
+            if (RectTransformUtility.RectangleContainsScreenPoint(this.controlPanelBG, Input.mousePosition))
+            {
+                return;
+            }
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit[] hits = Physics.RaycastAll(ray);
             BVHMotionPlayer target = null;
@@ -96,12 +111,20 @@ public class AppManager : MonoBehaviour
         }
     }
 
-    public void ToggleArcLength()
+    public void ToggleArcLength(bool isOn)
     {
         if (this.selectedMotion != null)
         {
-            this.selectedMotion.splineController.ToggleUseArcLengthMode();
-            print($"arcLenth mode: {this.selectedMotion.splineController.useArcLength}");
+            this.selectedMotion.splineController.useArcLength = isOn;
+            print($"arcLenth mode: {isOn}");
+        }
+    }
+
+    public void ChangeMotionSpeed()
+    {
+        if (this.selectedMotion != null)
+        {
+            this.selectedMotion.speed = this.speedSlider.value * 2;
         }
     }
 
@@ -110,10 +133,14 @@ public class AppManager : MonoBehaviour
         if (this.selectedMotion != null)
         {
             print($"select {this.selectedMotion.gameObject.name}");
+            this.speedSlider.value = this.selectedMotion.speed / 2;
+            this.useArcLengthToggle.isOn = this.selectedMotion.splineController.useArcLength;
+            this.motionNameText.text = this.selectedMotion.gameObject.name;
         }
         else
         {
             print("unselected");
         }
+        this.controlPanel.SetActive(this.selectedMotion != null);
     }
 }
