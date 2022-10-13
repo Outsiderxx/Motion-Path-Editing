@@ -13,7 +13,7 @@ public class CubicBSpline
 
     public CubicBSpline(Vector3[] points)
     {
-        this.CalulateTFacctorAtEachPoint(points);
+        this.CalulateTFactorAtEachPoint(points);
         this.CalculateCumlativeDistanceAtEachPoint(points);
         this.currentCumulativeDistances = new List<float>(this.originCumulativeDistances);
 
@@ -161,7 +161,7 @@ public class CubicBSpline
         return 0.16667f * t * t * t;
     }
 
-    private void CalulateTFacctorAtEachPoint(Vector3[] points)
+    private void CalulateTFactorAtEachPoint(Vector3[] points)
     {
         this.originTFactors = new List<float>() { 0 };
         float totalChordLength = 0;
@@ -196,9 +196,10 @@ public class CubicBSpline
 
         for (int i = 1; i < 101; i++)
         {
-            this.currentTFactors.Add(this.currentTFactors[i - 1] + 1.0f / 100);
+            this.currentTFactors.Add(this.currentTFactors[i - 1] + 1 / 100.0f);
             this.currentCumulativeDistances.Add(this.currentCumulativeDistances[i - 1] + Vector3.Distance(this.GetPositionWithTime(this.currentTFactors[i]), this.GetPositionWithTime(this.currentTFactors[i - 1])));
         }
+        this.currentTFactors[this.currentTFactors.Count - 1] = 1;
     }
 
     private float FindTFactorOfArcLength(float arcLength)

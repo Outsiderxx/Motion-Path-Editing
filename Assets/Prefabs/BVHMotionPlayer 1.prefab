@@ -99,37 +99,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0.5, z: 0}
---- !u!1 &4292967487763845167
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2364869509616595450}
-  m_Layer: 0
-  m_Name: SkeletonRoot
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2364869509616595450
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4292967487763845167}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 9015809704831241060}
-  m_Father: {fileID: 5164382860246555037}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5750365831256735085
 GameObject:
   m_ObjectHideFlags: 0
@@ -158,8 +127,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 2364869509616595450}
   - {fileID: 933700326339893991}
+  - {fileID: 9015809704831241060}
   m_Father: {fileID: 8970617178985725907}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -179,7 +148,6 @@ MonoBehaviour:
   speed: 1
   splineController: {fileID: 3541808531391510161}
   modelController: {fileID: 1839958642040676083}
-  skeletonRoot: {fileID: 2364869509616595450}
   motionLine: {fileID: 7119748933467950652}
 --- !u!1 &6348277331920940191
 GameObject:
@@ -210,7 +178,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 5164382860246555037}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!120 &7119748933467950652
 LineRenderer:
@@ -337,8 +305,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 9112178921690882271}
-  m_Father: {fileID: 2364869509616595450}
-  m_RootOrder: 0
+  m_Father: {fileID: 5164382860246555037}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1839958642040676083
 MonoBehaviour:

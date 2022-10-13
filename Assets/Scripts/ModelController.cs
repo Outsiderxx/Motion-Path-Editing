@@ -10,6 +10,7 @@ public class ModelController : MonoBehaviour
     private Dictionary<string, Quaternion> initSkeletonQuaternion = new Dictionary<string, Quaternion>();
     private Vector3 initSkeletonRootPosition = Vector3.zero;
     private float skeletonModelScale;
+    public CubicBSpline spline = null;
 
     private static Dictionary<string, HumanBodyBones> humanBodyBoneIDMap = new Dictionary<string, HumanBodyBones>()
     {
@@ -145,12 +146,20 @@ public class ModelController : MonoBehaviour
     public void SetToFrameIndex(int frameIndex)
     {
         this.UpdateJointRotation(this._bvhData.root, frameIndex);
+        this.UpdateRootWorldRotation(frameIndex);
         this.UpdateRootPosition(frameIndex);
     }
 
     private void UpdateRootPosition(int frameIndex)
     {
-        this.transform.localPosition = new Vector3(this.bvhData.root.channels[0].values[frameIndex], this.bvhData.root.channels[1].values[frameIndex], this.bvhData.root.channels[2].values[frameIndex]) - this.initSkeletonRootPosition;
+        Vector3 detail = new Vector3(this.bvhData.root.channels[0].values[frameIndex], this.bvhData.root.channels[1].values[frameIndex], this.bvhData.root.channels[2].values[frameIndex]) - this.initSkeletonRootPosition; ;
+        this.transform.localPosition = this.spline.GetTranslationMatrix(frameIndex) * new Vector4(detail.x, detail.y, detail.z, 1);
+    }
+
+    private void UpdateRootWorldRotation(int frameIndex)
+    {
+        Quaternion rotation = this.spline.GetQuaternion(frameIndex);
+        this.transform.rotation = rotation;
     }
 
     private void UpdateJointRotation(BVHParser.BVHBone joint, int frameIndex)

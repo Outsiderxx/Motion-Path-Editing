@@ -7,7 +7,6 @@ public class BVHMotionPlayer : MonoBehaviour
     public float speed = 1;
     public CubicBSplineController splineController;
     [SerializeField] private ModelController modelController;
-    [SerializeField] private Transform skeletonRoot;
     [SerializeField] private LineRenderer motionLine;
 
     private BVHParser bvhData;
@@ -93,6 +92,7 @@ public class BVHMotionPlayer : MonoBehaviour
         this.CreateSkeleton();
         this.TransformToLocalCoordinate();
         this.modelController.bvhData = bvhData;
+        this.modelController.spline = this.splineController.spline;
         this.bvhData.root.transform.gameObject.SetActive(false);
     }
 
@@ -103,7 +103,7 @@ public class BVHMotionPlayer : MonoBehaviour
 
     private void CreateSkeleton()
     {
-        this.AddJoint(this.bvhData.root, this.skeletonRoot);
+        this.AddJoint(this.bvhData.root, this.transform);
         this.AddBone(this.bvhData.root);
     }
 
@@ -182,8 +182,8 @@ public class BVHMotionPlayer : MonoBehaviour
 
     private void NextFrame()
     {
-        this.UpdateRootPosition();
         this.UpdateJointRotation(this.bvhData.root);
+        this.UpdateRootPosition();
         this.UpdateRootWorldRotation();
         this.modelController.SetToFrameIndex(this.currentFrameIndex);
     }
@@ -196,13 +196,15 @@ public class BVHMotionPlayer : MonoBehaviour
 
     private void UpdateRootPosition()
     {
-        this.bvhData.root.transform.localPosition = new Vector3(this.bvhData.root.channels[0].values[this.currentFrameIndex], this.bvhData.root.channels[1].values[this.currentFrameIndex], this.bvhData.root.channels[2].values[this.currentFrameIndex]);
-        this.skeletonRoot.localPosition = this.splineController.spline.GetTranslationMatrix(this.currentFrameIndex) * new Vector4(0, 0, 0, 1);
+        Vector4 detail = new Vector4(this.bvhData.root.channels[0].values[this.currentFrameIndex], this.bvhData.root.channels[1].values[this.currentFrameIndex], this.bvhData.root.channels[2].values[this.currentFrameIndex], 1);
+        Matrix4x4 translationMatrix = this.splineController.spline.GetTranslationMatrix(this.currentFrameIndex);
+        this.bvhData.root.transform.localPosition = translationMatrix * detail;
     }
 
     private void UpdateRootWorldRotation()
     {
-        this.skeletonRoot.localRotation = this.splineController.spline.GetQuaternion(this.currentFrameIndex);
+        Quaternion rotation = this.splineController.spline.GetQuaternion(this.currentFrameIndex);
+        this.bvhData.root.transform.localRotation = rotation * this.bvhData.root.transform.localRotation;
     }
 
     private void UpdateJointRotation(BVHParser.BVHBone jointData)
