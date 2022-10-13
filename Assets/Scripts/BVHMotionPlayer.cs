@@ -12,7 +12,7 @@ public class BVHMotionPlayer : MonoBehaviour
     private BVHParser bvhData;
     private float _currentTime = 0;
     private int _currentFrameIndex = -1;
-    private bool _displayModel = true;
+    private bool _displayModel = false;
 
     public bool displayModel
     {
@@ -87,13 +87,12 @@ public class BVHMotionPlayer : MonoBehaviour
         }
         this.bvhData = bvhData;
         this.motionLine.positionCount = bvhData.frames;
-        this.handleBVHData();
         this.CreateSpline();
         this.CreateSkeleton();
         this.TransformToLocalCoordinate();
         this.modelController.bvhData = bvhData;
         this.modelController.spline = this.splineController.spline;
-        this.bvhData.root.transform.gameObject.SetActive(false);
+        this.modelController.gameObject.SetActive(false);
     }
 
     public void Stop()
@@ -234,48 +233,6 @@ public class BVHMotionPlayer : MonoBehaviour
         foreach (Transform child in this.transform)
         {
             MyUtils.DestroyRecursively(child);
-        }
-    }
-
-    private void handleBVHData()
-    {
-        for (int i = 0; i < this.bvhData.frames; i++)
-        {
-            this.bvhData.root.channels[0].values[i] *= -1;
-        }
-        foreach (var jointData in this.bvhData.allBones)
-        {
-            jointData.offsetX *= -1;
-            jointData.endSiteOffsetX *= -1;
-            for (int i = 0; i < this.bvhData.frames; i++)
-            {
-                jointData.channels[4].values[i] *= -1;
-                jointData.channels[5].values[i] *= -1;
-            }
-        }
-
-        foreach (BVHParser.BVHBone bone in this.bvhData.allBones)
-        {
-            bone.quaternions = new Quaternion[this.bvhData.frames];
-            for (int i = 0; i < this.bvhData.frames; i++)
-            {
-                for (int j = 3; j < 6; j++)
-                {
-                    int channelID = bone.channelOrder[j];
-                    if (channelID == 3)
-                    {
-                        bone.quaternions[i] *= Quaternion.AngleAxis(bone.channels[3].values[i], Vector3.right);
-                    }
-                    else if (channelID == 4)
-                    {
-                        bone.quaternions[i] *= Quaternion.AngleAxis(bone.channels[4].values[i], Vector3.up);
-                    }
-                    else
-                    {
-                        bone.quaternions[i] = Quaternion.AngleAxis(bone.channels[5].values[i], Vector3.forward);
-                    }
-                }
-            }
         }
     }
 }

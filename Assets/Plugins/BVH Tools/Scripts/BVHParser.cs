@@ -521,6 +521,50 @@ public class BVHParser
                 assure("channel value", getFloat(out channels[channel][i]));
             }
         }
+
+        this.handle();
+    }
+
+    private void handle()
+    {
+        for (int i = 0; i < this.frames; i++)
+        {
+            this.root.channels[0].values[i] *= -1;
+        }
+        foreach (var jointData in this.allBones)
+        {
+            jointData.offsetX *= -1;
+            jointData.endSiteOffsetX *= -1;
+            for (int i = 0; i < this.frames; i++)
+            {
+                jointData.channels[4].values[i] *= -1;
+                jointData.channels[5].values[i] *= -1;
+            }
+        }
+
+        foreach (BVHParser.BVHBone bone in this.allBones)
+        {
+            bone.quaternions = new Quaternion[this.frames];
+            for (int i = 0; i < this.frames; i++)
+            {
+                for (int j = 3; j < 6; j++)
+                {
+                    int channelID = bone.channelOrder[j];
+                    if (channelID == 3)
+                    {
+                        bone.quaternions[i] *= Quaternion.AngleAxis(bone.channels[3].values[i], Vector3.right);
+                    }
+                    else if (channelID == 4)
+                    {
+                        bone.quaternions[i] *= Quaternion.AngleAxis(bone.channels[4].values[i], Vector3.up);
+                    }
+                    else
+                    {
+                        bone.quaternions[i] = Quaternion.AngleAxis(bone.channels[5].values[i], Vector3.forward);
+                    }
+                }
+            }
+        }
     }
 
     public BVHParser(string bvhText)

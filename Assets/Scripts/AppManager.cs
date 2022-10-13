@@ -103,6 +103,41 @@ public class AppManager : MonoBehaviour
         }
     }
 
+    public void AddConcateMotion()
+    {
+        string[] selectedFilePathes = DialogShow.ShowOpenFileDialog("Choose bvh files", Application.dataPath, "bvh files\0*.bvh\0All Files\0*.*\0\0", false, true);
+        if (selectedFilePathes == null)
+        {
+            print("User cancel action");
+        }
+        else if (selectedFilePathes.Length != 2)
+        {
+            print("Please choose only two files");
+        }
+        else
+        {
+            string fileNameA = Path.GetFileNameWithoutExtension(selectedFilePathes[0]);
+            string fileNameB = Path.GetFileNameWithoutExtension(selectedFilePathes[1]);
+            try
+            {
+                BVHParser bvhDataA = new BVHParser(File.ReadAllText(selectedFilePathes[0]));
+                BVHParser bvhDataB = new BVHParser(File.ReadAllText(selectedFilePathes[1]));
+                ConcatMotion.Concat(bvhDataA, bvhDataB);
+                print($"Load {fileNameA}, {fileNameB} successfully");
+
+                BVHMotionPlayer player = Instantiate(this.bvhMotionPlayerPrefab, this.playground).GetComponentInChildren<BVHMotionPlayer>();
+                player.gameObject.name = $"{fileNameA} + {fileNameB}";
+                player.Play(bvhDataA);
+                this.selectedMotion = player;
+            }
+            catch (System.Exception exception)
+            {
+                print($"Load  {fileNameA}, {fileNameB}  failed");
+                Debug.LogException(exception);
+            }
+        }
+    }
+
     public void DeleteSelectedMotion()
     {
         if (this.selectedMotion != null)
@@ -136,6 +171,14 @@ public class AppManager : MonoBehaviour
         if (this.selectedMotion != null)
         {
             this.selectedMotion.speed = this.speedSlider.value * 2;
+        }
+    }
+
+    public void DeleteAllMotion()
+    {
+        foreach (Transform motion in this.playground)
+        {
+            MyUtils.DestroyRecursively(motion);
         }
     }
 
