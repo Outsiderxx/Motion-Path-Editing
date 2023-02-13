@@ -11,6 +11,7 @@ public class AppManager : MonoBehaviour
     [SerializeField] private Toggle displayModelToggle;
     [SerializeField] private GameObject controlPanel;
     [SerializeField] private Text motionNameText;
+    [SerializeField] private Text message;
     [SerializeField] private RuntimeGizmos.TransformGizmo gizmo;
 
     private RectTransform controlPanelBG;
@@ -89,10 +90,12 @@ public class AppManager : MonoBehaviour
                     player.gameObject.name = fileName;
                     player.Play(bvhData);
                     this.selectedMotion = player;
+                    this.message.text = "";
                 }
                 catch (System.Exception exception)
                 {
                     print($"Load {fileName} failed");
+                    this.message.text = exception.Message;
                     Debug.LogException(exception);
                 }
             }
@@ -100,6 +103,7 @@ public class AppManager : MonoBehaviour
         else
         {
             print("User cancel action");
+            this.message.text = "";
         }
     }
 
@@ -109,10 +113,13 @@ public class AppManager : MonoBehaviour
         if (selectedFilePathes == null)
         {
             print("User cancel action");
+            this.message.text = "";
         }
         else if (selectedFilePathes.Length != 2)
         {
-            print("Please choose only two files");
+            print("Please choose two files");
+            this.message.text = "Please choose two files";
+
         }
         else
         {
@@ -129,10 +136,12 @@ public class AppManager : MonoBehaviour
                 player.gameObject.name = $"{fileNameA} + {fileNameB}";
                 player.Play(bvhDataA);
                 this.selectedMotion = player;
+                this.message.text = "";
             }
             catch (System.Exception exception)
             {
                 print($"Load  {fileNameA}, {fileNameB}  failed");
+                this.message.text = exception.Message;
                 Debug.LogException(exception);
             }
         }
