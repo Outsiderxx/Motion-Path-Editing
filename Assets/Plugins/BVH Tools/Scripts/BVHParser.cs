@@ -322,6 +322,34 @@ public class BVHParser
             }
         }
 
+        // Read exponential sign
+        if (pos < bvhText.Length && bvhText[pos] == 'e')
+        {
+            pos++;
+
+            bool exponentialNegative = false;
+            if (pos < bvhText.Length && bvhText[pos] == '-')
+            {
+                exponentialNegative = true;
+                pos++;
+            }
+
+            // Read digits after exponential sign
+            float u = 0;
+            while (pos < bvhText.Length && bvhText[pos] >= '0' && bvhText[pos] <= '9' && i < 128)
+            {
+                u = u * 10 + (bvhText[pos++] - '0');
+                digitFound = true;
+            }
+
+            if (exponentialNegative)
+            {
+                u *= -1f;
+            }
+            v *= Mathf.Pow(10, u);
+        }
+
+
         // Finalize
         if (negate)
         {
