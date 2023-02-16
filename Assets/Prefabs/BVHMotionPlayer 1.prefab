@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pathLine: {fileID: 7751924930332718989}
-  useArcLength: 1
+  useArcLength: 0
 --- !u!1 &3011796575127304963
 GameObject:
   m_ObjectHideFlags: 0

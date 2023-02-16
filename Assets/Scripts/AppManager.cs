@@ -10,7 +10,10 @@ public class AppManager : MonoBehaviour
     [SerializeField] private Toggle useArcLengthToggle;
     [SerializeField] private Toggle displayModelToggle;
     [SerializeField] private GameObject controlPanel;
+    [SerializeField] private Slider desiredKnotPointCountSlider;
     [SerializeField] private Text motionNameText;
+    [SerializeField] private Text speedText;
+    [SerializeField] private Text knotPointCountText;
     [SerializeField] private Text message;
     [SerializeField] private RuntimeGizmos.TransformGizmo gizmo;
 
@@ -88,6 +91,7 @@ public class AppManager : MonoBehaviour
 
                     BVHMotionPlayer player = Instantiate(this.bvhMotionPlayerPrefab, this.playground).GetComponentInChildren<BVHMotionPlayer>();
                     player.gameObject.name = fileName;
+                    player.desiredKnotPointCount = (int)this.desiredKnotPointCountSlider.value;
                     player.Play(bvhData);
                     this.selectedMotion = player;
                     this.message.text = "";
@@ -134,6 +138,7 @@ public class AppManager : MonoBehaviour
 
                 BVHMotionPlayer player = Instantiate(this.bvhMotionPlayerPrefab, this.playground).GetComponentInChildren<BVHMotionPlayer>();
                 player.gameObject.name = $"{fileNameA} + {fileNameB}";
+                player.desiredKnotPointCount = (int)this.desiredKnotPointCountSlider.value;
                 player.Play(bvhDataA);
                 this.selectedMotion = player;
                 this.message.text = "";
@@ -145,6 +150,11 @@ public class AppManager : MonoBehaviour
                 Debug.LogException(exception);
             }
         }
+    }
+
+    public void OnDesiredKnotPointCountChanged(float count)
+    {
+        this.knotPointCountText.text = $"{((int)(count))}";
     }
 
     public void DeleteSelectedMotion()
@@ -170,16 +180,17 @@ public class AppManager : MonoBehaviour
     {
         if (this.selectedMotion != null)
         {
-            this.selectedMotion.splineController.useArcLength = isOn;
+            this.selectedMotion.splineController.spline.useArcLength = isOn;
             print($"arcLenth mode: {isOn}");
         }
     }
 
-    public void ChangeMotionSpeed()
+    public void ChangeMotionSpeed(float speed)
     {
         if (this.selectedMotion != null)
         {
-            this.selectedMotion.speed = this.speedSlider.value * 2;
+            this.selectedMotion.speed = speed;
+            this.speedText.text = $"{speed.ToString("F2")}";
         }
     }
 
@@ -196,8 +207,8 @@ public class AppManager : MonoBehaviour
         if (this.selectedMotion != null)
         {
             print($"select {this.selectedMotion.gameObject.name}");
-            this.speedSlider.value = this.selectedMotion.speed / 2;
-            this.useArcLengthToggle.isOn = this.selectedMotion.splineController.useArcLength;
+            this.speedSlider.value = this.selectedMotion.speed;
+            this.useArcLengthToggle.isOn = this.selectedMotion.splineController.spline.useArcLength;
             this.displayModelToggle.isOn = this.selectedMotion.displayModel;
             this.motionNameText.text = this.selectedMotion.gameObject.name;
             gizmo.AddTarget(this.selectedMotion.transform.parent, true);

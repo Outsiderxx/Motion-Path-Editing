@@ -5,7 +5,8 @@ public class BVHMotionPlayer : MonoBehaviour
     public bool isLoop = false;
     [Range(0, 2)]
     public float speed = 1;
-    public CubicBSplineController splineController;
+    public int desiredKnotPointCount = 2;
+    public SplineController splineController;
     [SerializeField] private ModelController modelController;
     [SerializeField] private LineRenderer motionLine;
 
@@ -113,7 +114,7 @@ public class BVHMotionPlayer : MonoBehaviour
         {
             points[i] = new Vector3(bvhData.root.channels[0].values[i], bvhData.root.channels[1].values[0], bvhData.root.channels[2].values[i]);
         }
-        this.splineController.spline = new CubicBSpline(points);
+        this.splineController.spline = new CubicBezierSpline(points, this.desiredKnotPointCount);
     }
 
     private void TransformToLocalCoordinate()

@@ -9,7 +9,7 @@ public class ModelController : MonoBehaviour
     private Dictionary<string, Quaternion> initSkeletonQuaternion = new Dictionary<string, Quaternion>();
     private Vector3 initSkeletonRootPosition = Vector3.zero;
     private float skeletonModelScale;
-    public CubicBSpline spline = null;
+    public CubicBezierSpline spline = null;
 
     private static Dictionary<string, HumanBodyBones> humanBodyBoneIDMap = new Dictionary<string, HumanBodyBones>()
     {
