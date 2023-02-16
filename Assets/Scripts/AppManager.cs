@@ -74,6 +74,10 @@ public class AppManager : MonoBehaviour
         {
             this.DeleteSelectedMotion();
         }
+        if (Input.GetKeyUp(KeyCode.Escape))
+        {
+            this.controlPanel.SetActive(!this.controlPanel.activeSelf);
+        }
     }
 
     public void AddMotions()
