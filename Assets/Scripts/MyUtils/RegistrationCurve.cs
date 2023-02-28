@@ -211,7 +211,7 @@ public class RegistrationCurve
         // handle situation where the difference of delta of currentFrame and previosFrame more than 180 degree 
         for (int i = 1; i < this.alignmentCurve.Count; i++)
         {
-            if (Mathf.Abs(this.alignmentCurve[i].Item2.x - this.alignmentCurve[i - 1].Item2.x) > 180)
+            if (Mathf.Abs(this.alignmentCurve[i].Item2.x - this.alignmentCurve[i - 1].Item2.x) > 57 * 0.7)
             {
                 float originTheta = this.alignmentCurve[i].Item2.x;
                 float newTheta = originTheta + (this.alignmentCurve[i].Item2.x > this.alignmentCurve[i - 1].Item2.x ? -180 : 180);

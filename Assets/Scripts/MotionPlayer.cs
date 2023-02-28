@@ -139,6 +139,7 @@ public class MotionPlayer : MonoBehaviour
     {
         GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         gameObject.name = jointData.name;
+        gameObject.tag = "Skeleton";
         gameObject.transform.parent = parent;
         gameObject.transform.localPosition = new Vector3(jointData.offsetX, jointData.offsetY, jointData.offsetZ);
         jointData.transform = gameObject.transform;
@@ -164,6 +165,7 @@ public class MotionPlayer : MonoBehaviour
             Transform parent = jointData.parent.transform;
             GameObject bone = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             bone.name = $"Bone({parent.name},{jointData.transform.name})";
+            bone.tag = "Skeleton";
             bone.transform.parent = parent;
             bone.transform.up = (jointData.transform.position - parent.position).normalized;
             bone.transform.localScale = new Vector3(1, Vector3.Distance(jointData.transform.position, parent.position) * 0.5f, 1);

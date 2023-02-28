@@ -45,7 +45,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pathLine: {fileID: 7751924930332718989}
-  useArcLength: 0
 --- !u!1 &3011796575127304963
 GameObject:
   m_ObjectHideFlags: 0
@@ -146,6 +145,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isLoop: 1
   speed: 1
+  desiredKnotPointCount: 2
   splineController: {fileID: 3541808531391510161}
   modelController: {fileID: 1839958642040676083}
   motionLine: {fileID: 7119748933467950652}

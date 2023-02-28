@@ -19,6 +19,7 @@ public class AppManager : MonoBehaviour
 
     private RectTransform controlPanelBG;
     private MotionPlayer _selectedMotion = null;
+    private CameraFollow cameraFollow = null;
 
     private MotionPlayer selectedMotion
     {
@@ -40,6 +41,7 @@ public class AppManager : MonoBehaviour
     private void Awake()
     {
         this.controlPanelBG = this.controlPanel.transform.Find("Background").GetComponent<RectTransform>();
+        this.cameraFollow = Camera.main.GetComponent<CameraFollow>();
     }
 
     private void Start()
@@ -87,6 +89,10 @@ public class AppManager : MonoBehaviour
             {
                 motion.GetComponentInChildren<MotionPlayer>().enabled = !motion.GetComponentInChildren<MotionPlayer>().enabled;
             }
+        }
+        if (Input.GetKeyUp(KeyCode.F))
+        {
+            this.UnfollowTarget();
         }
     }
 
@@ -221,6 +227,7 @@ public class AppManager : MonoBehaviour
             print($"delete {this.selectedMotion.gameObject.name}");
             MyUtils.DestroyRecursively(this.selectedMotion.transform.parent);
             this.selectedMotion = null;
+            this.UnfollowTarget();
         }
     }
 
@@ -257,6 +264,7 @@ public class AppManager : MonoBehaviour
         {
             MyUtils.DestroyRecursively(motion);
         }
+        this.UnfollowTarget();
     }
 
     private void OnSeletedStateChanged()
@@ -272,8 +280,22 @@ public class AppManager : MonoBehaviour
         }
         else
         {
+            this.UnfollowTarget();
             print("unselected");
         }
         this.controlPanel.SetActive(this.selectedMotion != null);
+    }
+
+    public void FollowTarget()
+    {
+        if (this.selectedMotion != null)
+        {
+            this.cameraFollow.SetTarget(this.selectedMotion.bvhData.root.transform);
+        }
+    }
+
+    private void UnfollowTarget()
+    {
+        this.cameraFollow.SetTarget(null);
     }
 }
