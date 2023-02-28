@@ -74,9 +74,19 @@ public class AppManager : MonoBehaviour
         {
             this.DeleteSelectedMotion();
         }
-        if (Input.GetKeyUp(KeyCode.Escape))
+        if (Input.GetKeyUp(KeyCode.R))
         {
-            this.controlPanel.SetActive(!this.controlPanel.activeSelf);
+            foreach (Transform motion in this.playground)
+            {
+                motion.GetComponentInChildren<MotionPlayer>().Restart();
+            }
+        }
+        if (Input.GetKeyUp(KeyCode.P))
+        {
+            foreach (Transform motion in this.playground)
+            {
+                motion.GetComponentInChildren<MotionPlayer>().enabled = !motion.GetComponentInChildren<MotionPlayer>().enabled;
+            }
         }
     }
 

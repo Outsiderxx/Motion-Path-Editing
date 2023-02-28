@@ -177,6 +177,10 @@ public class BVHMotion
             int low = Mathf.FloorToInt(frameIndex);
             int high = Mathf.CeilToInt(frameIndex);
             float alpha = frameIndex - low;
+            if (low == high)
+            {
+                return new Vector3(channels[0].values[low], channels[1].values[low], channels[2].values[low]);
+            }
             return Vector3.Lerp(new Vector3(channels[0].values[low], channels[1].values[low], channels[2].values[low]), new Vector3(channels[0].values[high], channels[1].values[high], channels[2].values[high]), alpha);
         }
 
@@ -207,6 +211,10 @@ public class BVHMotion
             int low = Mathf.FloorToInt(frameIndex);
             int high = Mathf.CeilToInt(frameIndex);
             float alpha = frameIndex - low;
+            if (low == high)
+            {
+                return this.quaternions[low];
+            }
             return Quaternion.Lerp(this.quaternions[low], this.quaternions[high], alpha);
         }
     }

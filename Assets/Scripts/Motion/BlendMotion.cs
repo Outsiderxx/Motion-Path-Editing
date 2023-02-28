@@ -26,8 +26,8 @@ public static class BlendMotion
             Tuple<float, float> frameIndex = registrationCurve.S(u);
 
             // root position
-            oneFrameBlendedRootPosition = w.Item1 * (transformationA * motionA.root.GetLocalPosition(frameIndex.Item1)) + w.Item2 * (transformationB * motionB.root.GetLocalPosition(frameIndex.Item2));
-            oneFrameBlendedRootPosition = MyUtils.MakeTransformationMatrix(T[t]) * oneFrameBlendedRootPosition;
+            oneFrameBlendedRootPosition = w.Item1 * (transformationA.MultiplyPoint(motionA.root.GetLocalPosition(frameIndex.Item1))) + w.Item2 * (transformationB.MultiplyPoint(motionB.root.GetLocalPosition(frameIndex.Item2)));
+            oneFrameBlendedRootPosition = MyUtils.MakeTransformationMatrix(T[t]).MultiplyPoint(oneFrameBlendedRootPosition);
 
             // joint rotation
             for (int i = 0; i < motionA.allBones.Count; i++)

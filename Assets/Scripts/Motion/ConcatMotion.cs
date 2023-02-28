@@ -6,8 +6,8 @@ public static class ConcatMotion
     private static int interpolateFrameCount = 10;
     public static void Concat(BVHMotion motionA, BVHMotion motionB)
     {
-        Vector3 motionALastPosition = new Vector3(motionA.root.channels[0].values[motionA.frames - 1], motionA.root.channels[1].values[motionA.frames - 1], motionA.root.channels[2].values[motionA.frames - 1]);
-        Vector3 motionBFirstPosition = new Vector3(motionB.root.channels[0].values[0], motionB.root.channels[1].values[0], motionB.root.channels[2].values[0]);
+        Vector3 motionALastPosition = motionA.root.GetLocalPosition(motionA.frames - 1);
+        Vector3 motionBFirstPosition = motionB.root.GetLocalPosition(0);
         Vector3 positionDiff = motionBFirstPosition - motionALastPosition;
         for (int i = 0; i < motionB.frames; i++)
         {

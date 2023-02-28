@@ -62,14 +62,14 @@ public class CubicBezierSpline
         this.OnKnotPointChanged();
     }
 
-    public Vector3 GetPosition(int frameIndex)
+    public Vector3 GetPosition(float frameIndex)
     {
-        return this.Interpolate(this.useArcLength ? this.FindTFactorithArcLength(this.cumulativeDistances[frameIndex]) : this.tFactors[frameIndex]);
+        return this.Interpolate(this.useArcLength ? this.FindTFactorithArcLength(this.GetCumulativeDistance(frameIndex)) : this.GetTFactor(frameIndex));
     }
 
-    public Vector3 GetVelocity(int frameIndex)
+    public Vector3 GetVelocity(float frameIndex)
     {
-        float t = this.useArcLength ? this.FindTFactorithArcLength(this.cumulativeDistances[frameIndex]) : this.tFactors[frameIndex];
+        float t = this.useArcLength ? this.FindTFactorithArcLength(this.GetCumulativeDistance(frameIndex)) : this.GetTFactor(frameIndex);
         if (t == 0)
         {
             return this.Interpolate(t + 0.001f) - this.Interpolate((float)0);
@@ -77,25 +77,50 @@ public class CubicBezierSpline
         return this.Interpolate(t) - this.Interpolate(t - 0.001f);
     }
 
-    public Vector3 GetDirection(int frameIndex)
+    public Vector3 GetDirection(float frameIndex)
     {
         return this.GetVelocity(frameIndex).normalized;
     }
 
-    public Quaternion GetQuaternion(int frameIndex)
+    public Quaternion GetQuaternion(float frameIndex)
     {
         Vector3 direction = this.GetDirection(frameIndex);
         return Quaternion.FromToRotation(Vector3.forward, direction);
     }
 
-    public Matrix4x4 GetTranslationMatrix(int frameIndex)
+    public Matrix4x4 GetTranslationMatrix(float frameIndex)
     {
         Vector3 position = this.GetPosition(frameIndex);
-        Matrix4x4 result = Matrix4x4.identity;
-        result.m03 = position.x;
-        result.m13 = position.y;
-        result.m23 = position.z;
-        return result;
+        return Matrix4x4.Translate(position);
+        // Matrix4x4 result = Matrix4x4.identity;
+        // result.m03 = position.x;
+        // result.m13 = position.y;
+        // result.m23 = position.z;
+        // return result;
+    }
+
+    private float GetCumulativeDistance(float frameIndex)
+    {
+        int low = Mathf.FloorToInt(frameIndex);
+        int high = Mathf.CeilToInt(frameIndex);
+        float alpha = frameIndex - low;
+        if (low == high)
+        {
+            return this.cumulativeDistances[low];
+        }
+        return Mathf.Lerp(this.cumulativeDistances[low], this.cumulativeDistances[high], alpha);
+    }
+
+    private float GetTFactor(float frameIndex)
+    {
+        int low = Mathf.FloorToInt(frameIndex);
+        int high = Mathf.CeilToInt(frameIndex);
+        float alpha = frameIndex - low;
+        if (low == high)
+        {
+            return this.tFactors[low];
+        }
+        return Mathf.Lerp(this.tFactors[low], this.tFactors[high], alpha);
     }
 
     private int ChooseCurve(float t)

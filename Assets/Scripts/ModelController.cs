@@ -142,26 +142,26 @@ public class ModelController : MonoBehaviour
         this.initSkeletonRootPosition.z = 0;
     }
 
-    public void SetToFrameIndex(int frameIndex)
+    public void SetToFrameIndex(float frameIndex)
     {
         this.UpdateJointRotation(this._bvhData.root, frameIndex);
         this.UpdateRootWorldRotation(frameIndex);
         this.UpdateRootPosition(frameIndex);
     }
 
-    private void UpdateRootPosition(int frameIndex)
+    private void UpdateRootPosition(float frameIndex)
     {
-        Vector3 detail = new Vector3(this.bvhData.root.channels[0].values[frameIndex], this.bvhData.root.channels[1].values[frameIndex], this.bvhData.root.channels[2].values[frameIndex]) - this.initSkeletonRootPosition; ;
-        this.transform.localPosition = this.spline.GetTranslationMatrix(frameIndex) * new Vector4(detail.x, detail.y, detail.z, 1);
+        Vector3 detail = this.bvhData.root.GetLocalPosition(frameIndex) - this.initSkeletonRootPosition; ;
+        this.transform.localPosition = this.spline.GetTranslationMatrix(frameIndex).MultiplyPoint(detail);
     }
 
-    private void UpdateRootWorldRotation(int frameIndex)
+    private void UpdateRootWorldRotation(float frameIndex)
     {
         Quaternion rotation = this.spline.GetQuaternion(frameIndex);
         this.transform.rotation = rotation;
     }
 
-    private void UpdateJointRotation(BVHMotion.BVHBone joint, int frameIndex)
+    private void UpdateJointRotation(BVHMotion.BVHBone joint, float frameIndex)
     {
         try
         {

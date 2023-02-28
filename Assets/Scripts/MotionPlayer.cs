@@ -12,7 +12,7 @@ public class MotionPlayer : MonoBehaviour
 
     public BVHMotion bvhData { get; private set; }
     private float _currentTime = 0;
-    private int _currentFrameIndex = -1;
+    private float _currentFrameIndex = -1;
     private bool _displayModel = false;
 
     public bool displayModel
@@ -41,7 +41,7 @@ public class MotionPlayer : MonoBehaviour
         }
     }
 
-    public int currentFrameIndex
+    public float currentFrameIndex
     {
         get
         {
@@ -53,7 +53,7 @@ public class MotionPlayer : MonoBehaviour
             {
                 return;
             }
-            if (value >= this.bvhData.frames)
+            if (value > this.bvhData.frames - 1)
             {
                 if (!this.isLoop)
                 {
@@ -101,6 +101,11 @@ public class MotionPlayer : MonoBehaviour
         this.ResetState();
     }
 
+    public void Restart()
+    {
+        this._currentTime = 0;
+    }
+
     private void CreateSkeleton()
     {
         this.AddJoint(this.bvhData.root, this.transform);
@@ -112,7 +117,7 @@ public class MotionPlayer : MonoBehaviour
         Vector3[] points = new Vector3[bvhData.frames];
         for (int i = 0; i < points.Length; i++)
         {
-            points[i] = new Vector3(bvhData.root.channels[0].values[i], bvhData.root.channels[1].values[0], bvhData.root.channels[2].values[i]);
+            points[i] = bvhData.root.GetLocalPosition(i);
         }
         this.splineController.spline = new CubicBezierSpline(points, this.desiredKnotPointCount);
     }
@@ -121,8 +126,8 @@ public class MotionPlayer : MonoBehaviour
     {
         for (int i = 0; i < this.bvhData.frames; i++)
         {
-            Vector4 worldPosition = new Vector4(this.bvhData.root.channels[0].values[i], this.bvhData.root.channels[1].values[i], this.bvhData.root.channels[2].values[i], 1);
-            Vector3 localPosition = this.splineController.spline.GetTranslationMatrix(i).inverse * worldPosition;
+            Vector3 worldPosition = this.bvhData.root.GetLocalPosition(i);
+            Vector3 localPosition = this.splineController.spline.GetTranslationMatrix(i).inverse.MultiplyPoint(worldPosition);
             this.bvhData.root.channels[0].values[i] = localPosition.x;
             this.bvhData.root.channels[1].values[i] = localPosition.y;
             this.bvhData.root.channels[2].values[i] = localPosition.z;
@@ -191,14 +196,13 @@ public class MotionPlayer : MonoBehaviour
     private void UpdateAnimationTime()
     {
         this._currentTime += Time.deltaTime * this.speed;
-        this.currentFrameIndex = (int)(this._currentTime / this.bvhData.frameTime);
+        this.currentFrameIndex = this._currentTime / this.bvhData.frameTime;
     }
 
     private void UpdateRootPosition()
     {
-        Vector4 detail = new Vector4(this.bvhData.root.channels[0].values[this.currentFrameIndex], this.bvhData.root.channels[1].values[this.currentFrameIndex], this.bvhData.root.channels[2].values[this.currentFrameIndex], 1);
         Matrix4x4 translationMatrix = this.splineController.spline.GetTranslationMatrix(this.currentFrameIndex);
-        this.bvhData.root.transform.localPosition = translationMatrix * detail;
+        this.bvhData.root.transform.localPosition = translationMatrix.MultiplyPoint(this.bvhData.root.GetLocalPosition(this.currentFrameIndex));
     }
 
     private void UpdateRootWorldRotation()
@@ -209,7 +213,7 @@ public class MotionPlayer : MonoBehaviour
 
     private void UpdateJointRotation(BVHMotion.BVHBone jointData)
     {
-        jointData.transform.localRotation = jointData.quaternions[this.currentFrameIndex];
+        jointData.transform.localRotation = jointData.GetLocalQuaternion(this.currentFrameIndex);
         foreach (var childJointData in jointData.children)
         {
             this.UpdateJointRotation(childJointData);
@@ -220,8 +224,8 @@ public class MotionPlayer : MonoBehaviour
     {
         for (int i = 0; i < this.bvhData.frames; i++)
         {
-            Vector4 currentLocalPosition = new Vector4(this.bvhData.root.channels[0].values[i], this.bvhData.root.channels[1].values[i], this.bvhData.root.channels[2].values[i], 1);
-            Vector3 currentWorldPosition = this.splineController.spline.GetTranslationMatrix(i) * currentLocalPosition;
+            Vector4 currentLocalPosition = this.bvhData.root.GetLocalPosition(i);
+            Vector3 currentWorldPosition = this.splineController.spline.GetTranslationMatrix(i).MultiplyPoint(currentLocalPosition);
             this.motionLine.SetPosition(i, this.transform.TransformPoint(currentWorldPosition));
         }
     }

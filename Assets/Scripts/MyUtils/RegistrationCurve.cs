@@ -50,24 +50,23 @@ public class RegistrationCurve
         int low = Mathf.FloorToInt(u);
         int high = Mathf.CeilToInt(u);
         float alpha = u - low;
+        if (low == high)
+        {
+            return new Tuple<float, float>(this.timewrapCurve[low].Item1, this.timewrapCurve[low].Item2);
+        }
         return new Tuple<float, float>(Mathf.Lerp(this.timewrapCurve[low].Item1, this.timewrapCurve[high].Item1, alpha), Mathf.Lerp(this.timewrapCurve[low].Item2, this.timewrapCurve[high].Item2, alpha));
     }
 
     public Tuple<Vector3, Vector3> A(float u)
     {
-        try
+        int low = Mathf.FloorToInt(u);
+        int high = Mathf.CeilToInt(u);
+        float alpha = u - low;
+        if (low == high)
         {
-            int low = Mathf.FloorToInt(u);
-            int high = Mathf.CeilToInt(u);
-            float alpha = u - low;
-            return new Tuple<Vector3, Vector3>(Vector3.Lerp(this.alignmentCurve[low].Item1, this.alignmentCurve[high].Item1, alpha), Vector3.Lerp(this.alignmentCurve[low].Item2, this.alignmentCurve[high].Item2, alpha));
+            return new Tuple<Vector3, Vector3>(this.alignmentCurve[low].Item1, this.alignmentCurve[low].Item2);
         }
-        catch (System.Exception)
-        {
-            Debug.Log("");
-            throw;
-        }
-
+        return new Tuple<Vector3, Vector3>(Vector3.Lerp(this.alignmentCurve[low].Item1, this.alignmentCurve[high].Item1, alpha), Vector3.Lerp(this.alignmentCurve[low].Item2, this.alignmentCurve[high].Item2, alpha));
     }
 
     private void CreateTransformationMap()
@@ -107,7 +106,7 @@ public class RegistrationCurve
                 {
                     Vector3 pointA = this.motionA.allBones[u].GetWorldPosition(i);
                     Vector3 pointB = this.motionB.allBones[u].GetWorldPosition(j);
-                    distance += Vector3.Distance(pointA, MyUtils.MakeTransformationMatrix(transformation) * pointB);
+                    distance += Vector3.Distance(pointA, MyUtils.MakeTransformationMatrix(transformation).MultiplyPoint(pointB));
                 }
                 this.distanceMap[i, j] = distance;
             }
@@ -219,7 +218,7 @@ public class RegistrationCurve
 
                 Vector3 originTranslation = new Vector3(this.alignmentCurve[i].Item2.y, 0, this.alignmentCurve[i].Item2.z);
                 int frameIndexB = this.timewrapCurve[i].Item2;
-                Vector3 motionBRootPos = new Vector3(this.motionB.root.channels[0].values[frameIndexB], this.motionB.root.channels[1].values[frameIndexB], this.motionB.root.channels[2].values[frameIndexB]);
+                Vector3 motionBRootPos = this.motionB.root.GetLocalPosition(frameIndexB); ;
                 Vector3 newTranslation = originTranslation + Quaternion.Euler(0, originTheta, 0) * motionBRootPos - Quaternion.Euler(0, newTheta, 0) * motionBRootPos;
 
                 this.alignmentCurve[i] = new Tuple<Vector3, Vector3>(new Vector3(), new Vector3(newTheta, newTranslation.x, newTranslation.z));
