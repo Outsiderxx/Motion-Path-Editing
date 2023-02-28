@@ -14,6 +14,7 @@ public class RegistrationCurve
     }
 
     private static readonly int REFERENCE_NEIGHBOR_COUNT = 5;
+    private static readonly int SLOPE_LIMIT = 1;
     private List<Tuple<int, int>> timewrapCurve = new List<Tuple<int, int>>();
     private List<Tuple<Vector3, Vector3>> alignmentCurve = new List<Tuple<Vector3, Vector3>>();
     private float[,] distanceMap;
@@ -132,11 +133,11 @@ public class RegistrationCurve
                 float upCumulativeDistance = up != null ? up.cumulatedDistance : Mathf.Infinity;
 
                 // ensure slope limit
-                if (left != null && left.consecutiveColumnIncreaseTimes >= 2)
+                if (left != null && left.consecutiveColumnIncreaseTimes >= RegistrationCurve.SLOPE_LIMIT)
                 {
                     leftCumulativeDistance = Mathf.Infinity;
                 }
-                if (up != null && up.consecutiveRowIncreaseTimes >= 2)
+                if (up != null && up.consecutiveRowIncreaseTimes >= RegistrationCurve.SLOPE_LIMIT)
                 {
                     upCumulativeDistance = Mathf.Infinity;
                 }
@@ -211,7 +212,7 @@ public class RegistrationCurve
         // handle situation where the difference of delta of currentFrame and previosFrame more than 180 degree 
         for (int i = 1; i < this.alignmentCurve.Count; i++)
         {
-            if (Mathf.Abs(this.alignmentCurve[i].Item2.x - this.alignmentCurve[i - 1].Item2.x) > 57 * 0.7)
+            if (Mathf.Abs(this.alignmentCurve[i].Item2.x - this.alignmentCurve[i - 1].Item2.x) > 180)
             {
                 float originTheta = this.alignmentCurve[i].Item2.x;
                 float newTheta = originTheta + (this.alignmentCurve[i].Item2.x > this.alignmentCurve[i - 1].Item2.x ? -180 : 180);
