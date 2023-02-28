@@ -4,7 +4,7 @@ using UnityEngine;
 public class ModelController : MonoBehaviour
 {
     [SerializeField] private Animator animator;
-    private BVHParser _bvhData;
+    private BVHMotion _bvhData;
     private Dictionary<HumanBodyBones, Quaternion> initBoneQuaternion = new Dictionary<HumanBodyBones, Quaternion>();
     private Dictionary<string, Quaternion> initSkeletonQuaternion = new Dictionary<string, Quaternion>();
     private Vector3 initSkeletonRootPosition = Vector3.zero;
@@ -46,7 +46,7 @@ public class ModelController : MonoBehaviour
         ["Head"] = HumanBodyBones.Head
     };
 
-    public BVHParser bvhData
+    public BVHMotion bvhData
     {
         get
         {
@@ -64,7 +64,7 @@ public class ModelController : MonoBehaviour
         Transform upArm = this.animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
         Transform lowArm = this.animator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
         // find quaternion to convert bvh to t pose ( left shoulder and right shoulder )
-        foreach (BVHParser.BVHBone bone in this.bvhData.allBones)
+        foreach (BVHMotion.BVHBone bone in this.bvhData.allBones)
         {
             Quaternion result = Quaternion.identity;
             if (bone.name == "LeftShoulder" || bone.name == "LeftUpArm")
@@ -95,7 +95,7 @@ public class ModelController : MonoBehaviour
         }
 
         // save bone t pose rotation
-        foreach (BVHParser.BVHBone bone in this.bvhData.allBones)
+        foreach (BVHMotion.BVHBone bone in this.bvhData.allBones)
         {
             try
             {
@@ -111,14 +111,14 @@ public class ModelController : MonoBehaviour
 
         // adjust scale
         float modelBoneLength = Vector3.Distance(this.animator.GetBoneTransform(HumanBodyBones.Head).position, this.animator.GetBoneTransform(HumanBodyBones.Neck).position);
-        BVHParser.BVHBone nick = bvhData.GetBone("Neck");
-        BVHParser.BVHBone head = bvhData.GetBone("Head");
+        BVHMotion.BVHBone nick = bvhData.GetBone("Neck");
+        BVHMotion.BVHBone head = bvhData.GetBone("Head");
         float skeletonBoneLength = Vector3.Distance(nick.transform.position, head.transform.position);
         this.skeletonModelScale = skeletonBoneLength / modelBoneLength;
         this.animator.transform.localScale = Vector3.one * skeletonModelScale;
 
         // set offset
-        foreach (BVHParser.BVHBone bone in this.bvhData.allBones)
+        foreach (BVHMotion.BVHBone bone in this.bvhData.allBones)
         {
             try
             {
@@ -132,12 +132,12 @@ public class ModelController : MonoBehaviour
             }
         }
 
-        BVHParser.BVHBone ankle = bvhData.GetBone("RightFoot");
+        BVHMotion.BVHBone ankle = bvhData.GetBone("RightFoot");
         if (ankle == null)
         {
             ankle = bvhData.GetBone("RightAnkle");
         }
-        this.initSkeletonRootPosition = -BVHParser.FindTotalOffset(ankle);
+        this.initSkeletonRootPosition = -BVHMotion.FindTotalOffset(ankle);
         this.initSkeletonRootPosition.x = 0;
         this.initSkeletonRootPosition.z = 0;
     }
@@ -161,7 +161,7 @@ public class ModelController : MonoBehaviour
         this.transform.rotation = rotation;
     }
 
-    private void UpdateJointRotation(BVHParser.BVHBone joint, int frameIndex)
+    private void UpdateJointRotation(BVHMotion.BVHBone joint, int frameIndex)
     {
         try
         {
@@ -174,7 +174,7 @@ public class ModelController : MonoBehaviour
             exception.ToString();
         }
 
-        foreach (BVHParser.BVHBone bone in joint.children)
+        foreach (BVHMotion.BVHBone bone in joint.children)
         {
             this.UpdateJointRotation(bone, frameIndex);
         }

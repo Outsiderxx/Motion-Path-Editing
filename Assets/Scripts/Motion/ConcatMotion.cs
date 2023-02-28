@@ -4,7 +4,7 @@ using System;
 public static class ConcatMotion
 {
     private static int interpolateFrameCount = 10;
-    public static void Concat(BVHParser motionA, BVHParser motionB)
+    public static void Concat(BVHMotion motionA, BVHMotion motionB)
     {
         Vector3 motionALastPosition = new Vector3(motionA.root.channels[0].values[motionA.frames - 1], motionA.root.channels[1].values[motionA.frames - 1], motionA.root.channels[2].values[motionA.frames - 1]);
         Vector3 motionBFirstPosition = new Vector3(motionB.root.channels[0].values[0], motionB.root.channels[1].values[0], motionB.root.channels[2].values[0]);
@@ -18,7 +18,7 @@ public static class ConcatMotion
 
         foreach (var bone in motionA.allBones)
         {
-            BVHParser.BVHBone boneB = motionB.allBones.Find(ele => ele.name == bone.name);
+            BVHMotion.BVHBone boneB = motionB.allBones.Find(ele => ele.name == bone.name);
             if (boneB == null)
             {
                 throw new Exception("Skeleton match failed");

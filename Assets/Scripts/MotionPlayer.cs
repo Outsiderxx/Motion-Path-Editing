@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class BVHMotionPlayer : MonoBehaviour
+public class MotionPlayer : MonoBehaviour
 {
     public bool isLoop = false;
     [Range(0, 2)]
@@ -10,7 +10,7 @@ public class BVHMotionPlayer : MonoBehaviour
     [SerializeField] private ModelController modelController;
     [SerializeField] private LineRenderer motionLine;
 
-    private BVHParser bvhData;
+    public BVHMotion bvhData { get; private set; }
     private float _currentTime = 0;
     private int _currentFrameIndex = -1;
     private bool _displayModel = false;
@@ -41,7 +41,7 @@ public class BVHMotionPlayer : MonoBehaviour
         }
     }
 
-    private int currentFrameIndex
+    public int currentFrameIndex
     {
         get
         {
@@ -80,7 +80,7 @@ public class BVHMotionPlayer : MonoBehaviour
         this.DrawMotion();
     }
 
-    public void Play(BVHParser bvhData)
+    public void Play(BVHMotion bvhData)
     {
         if (this.bvhData != null)
         {
@@ -130,7 +130,7 @@ public class BVHMotionPlayer : MonoBehaviour
         }
     }
 
-    private GameObject AddJoint(BVHParser.BVHBone jointData, Transform parent)
+    private GameObject AddJoint(BVHMotion.BVHBone jointData, Transform parent)
     {
         GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         gameObject.name = jointData.name;
@@ -152,7 +152,7 @@ public class BVHMotionPlayer : MonoBehaviour
         return gameObject;
     }
 
-    private void AddBone(BVHParser.BVHBone jointData)
+    private void AddBone(BVHMotion.BVHBone jointData)
     {
         if (jointData.parent != null)
         {
@@ -164,7 +164,7 @@ public class BVHMotionPlayer : MonoBehaviour
             bone.transform.localScale = new Vector3(1, Vector3.Distance(jointData.transform.position, parent.position) * 0.5f, 1);
             bone.transform.position = Vector3.Lerp(jointData.transform.position, parent.position, 0.5f);
         }
-        foreach (BVHParser.BVHBone child in jointData.children)
+        foreach (BVHMotion.BVHBone child in jointData.children)
         {
             this.AddBone(child);
         }
@@ -207,7 +207,7 @@ public class BVHMotionPlayer : MonoBehaviour
         this.bvhData.root.transform.localRotation = rotation * this.bvhData.root.transform.localRotation;
     }
 
-    private void UpdateJointRotation(BVHParser.BVHBone jointData)
+    private void UpdateJointRotation(BVHMotion.BVHBone jointData)
     {
         jointData.transform.localRotation = jointData.quaternions[this.currentFrameIndex];
         foreach (var childJointData in jointData.children)

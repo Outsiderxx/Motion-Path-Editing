@@ -18,9 +18,9 @@ public class AppManager : MonoBehaviour
     [SerializeField] private RuntimeGizmos.TransformGizmo gizmo;
 
     private RectTransform controlPanelBG;
-    private BVHMotionPlayer _selectedMotion = null;
+    private MotionPlayer _selectedMotion = null;
 
-    private BVHMotionPlayer selectedMotion
+    private MotionPlayer selectedMotion
     {
         get
         {
@@ -57,11 +57,11 @@ public class AppManager : MonoBehaviour
             }
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit[] hits = Physics.RaycastAll(ray);
-            BVHMotionPlayer target = null;
+            MotionPlayer target = null;
             for (int i = 0; i < hits.Length; i++)
             {
                 RaycastHit hit = hits[i];
-                target = hit.transform.GetComponentInParent<BVHMotionPlayer>();
+                target = hit.transform.GetComponentInParent<MotionPlayer>();
                 if (target != null)
                 {
                     break;
@@ -90,10 +90,10 @@ public class AppManager : MonoBehaviour
                 string fileName = Path.GetFileNameWithoutExtension(selectedFilePath);
                 try
                 {
-                    BVHParser bvhData = new BVHParser(File.ReadAllText(selectedFilePath));
+                    BVHMotion bvhData = new BVHMotion(File.ReadAllText(selectedFilePath));
                     print($"Load {fileName} successfully");
 
-                    BVHMotionPlayer player = Instantiate(this.bvhMotionPlayerPrefab, this.playground).GetComponentInChildren<BVHMotionPlayer>();
+                    MotionPlayer player = Instantiate(this.bvhMotionPlayerPrefab, this.playground).GetComponentInChildren<MotionPlayer>();
                     player.gameObject.name = fileName;
                     player.desiredKnotPointCount = (int)this.desiredKnotPointCountSlider.value;
                     player.Play(bvhData);
@@ -127,7 +127,6 @@ public class AppManager : MonoBehaviour
         {
             print("Please choose two files");
             this.message.text = "Please choose two files";
-
         }
         else
         {
@@ -135,12 +134,12 @@ public class AppManager : MonoBehaviour
             string fileNameB = Path.GetFileNameWithoutExtension(selectedFilePathes[1]);
             try
             {
-                BVHParser bvhDataA = new BVHParser(File.ReadAllText(selectedFilePathes[0]));
-                BVHParser bvhDataB = new BVHParser(File.ReadAllText(selectedFilePathes[1]));
+                BVHMotion bvhDataA = new BVHMotion(File.ReadAllText(selectedFilePathes[0]));
+                BVHMotion bvhDataB = new BVHMotion(File.ReadAllText(selectedFilePathes[1]));
                 ConcatMotion.Concat(bvhDataA, bvhDataB);
-                print($"Load {fileNameA}, {fileNameB} successfully");
+                print($"Concat {fileNameA}, {fileNameB} successfully");
 
-                BVHMotionPlayer player = Instantiate(this.bvhMotionPlayerPrefab, this.playground).GetComponentInChildren<BVHMotionPlayer>();
+                MotionPlayer player = Instantiate(this.bvhMotionPlayerPrefab, this.playground).GetComponentInChildren<MotionPlayer>();
                 player.gameObject.name = $"{fileNameA} + {fileNameB}";
                 player.desiredKnotPointCount = (int)this.desiredKnotPointCountSlider.value;
                 player.Play(bvhDataA);
@@ -149,7 +148,51 @@ public class AppManager : MonoBehaviour
             }
             catch (System.Exception exception)
             {
-                print($"Load  {fileNameA}, {fileNameB}  failed");
+                print($"Concat  {fileNameA}, {fileNameB}  failed");
+                this.message.text = exception.Message;
+                Debug.LogException(exception);
+            }
+        }
+    }
+
+    public void AddBlendMotion()
+    {
+        string[] selectedFilePathes = DialogShow.ShowOpenFileDialog("Choose bvh files", Application.dataPath, "bvh files\0*.bvh\0All Files\0*.*\0\0", false, true);
+        if (selectedFilePathes == null)
+        {
+            print("User cancel action");
+            this.message.text = "";
+        }
+        else if (selectedFilePathes.Length != 2)
+        {
+            print("Please choose two files");
+            this.message.text = "Please choose two files";
+        }
+        else
+        {
+            string fileNameA = Path.GetFileNameWithoutExtension(selectedFilePathes[0]);
+            string fileNameB = Path.GetFileNameWithoutExtension(selectedFilePathes[1]);
+            try
+            {
+                BVHMotion bvhDataA = new BVHMotion(File.ReadAllText(selectedFilePathes[0]));
+                BVHMotion bvhDataB = new BVHMotion(File.ReadAllText(selectedFilePathes[1]));
+                float[] weights = new float[bvhDataA.frames];
+                for (int i = 0; i < weights.Length; i++)
+                {
+                    weights[i] = 0.5f;
+                }
+                BVHMotion blendMotion = BlendMotion.Blend(bvhDataA, bvhDataB, weights);
+                MotionPlayer player = Instantiate(this.bvhMotionPlayerPrefab, this.playground).GetComponentInChildren<MotionPlayer>();
+                player.gameObject.name = $"{fileNameA} + {fileNameB}";
+                player.desiredKnotPointCount = (int)this.desiredKnotPointCountSlider.value;
+                player.Play(blendMotion);
+                this.selectedMotion = player;
+                this.message.text = "";
+                print($"Blend {fileNameA}, {fileNameB} successfully");
+            }
+            catch (System.Exception exception)
+            {
+                print($"Blend  {fileNameA}, {fileNameB}  failed");
                 this.message.text = exception.Message;
                 Debug.LogException(exception);
             }
